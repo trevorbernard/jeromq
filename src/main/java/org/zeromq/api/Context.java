@@ -3,6 +3,7 @@ package org.zeromq.api;
 import java.io.Closeable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import zmq.Ctx;
 import zmq.SocketBase;
@@ -10,6 +11,7 @@ import zmq.ZMQ;
 
 public class Context implements Closeable {
     private final List<Socket> sockets = new ArrayList<Socket>();
+    private final AtomicBoolean isClosed = new AtomicBoolean(false);
 
     private final Ctx context;
 
@@ -47,10 +49,12 @@ public class Context implements Closeable {
 
     @Override
     public void close() {
-        for (Socket s : sockets) {
-            s.setLinger(0);
-            s.close();
+        if (isClosed.compareAndSet(false, true)) {
+            for (Socket s : sockets) {
+                s.setLinger(0);
+                s.close();
+            }
+            context.terminate();
         }
-        context.terminate();
     }
 }

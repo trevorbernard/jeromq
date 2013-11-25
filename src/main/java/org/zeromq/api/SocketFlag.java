@@ -1,7 +1,9 @@
 package org.zeromq.api;
 
+import zmq.ZMQ;
+
 public enum SocketFlag {
-    NONE(0), SEND_MORE(1), DONT_WAIT(2);
+    NONE(0), SEND_MORE(ZMQ.ZMQ_SNDMORE), DONT_WAIT(ZMQ.ZMQ_DONTWAIT);
     
     private final int value;
     

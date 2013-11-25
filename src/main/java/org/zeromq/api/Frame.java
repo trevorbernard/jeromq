@@ -37,4 +37,16 @@ public class Frame {
     public int hashCode() {
         return Arrays.hashCode(data) + (hasMore ? 1231 : 1237);
     }
+
+    public String hex() {
+        StringBuilder sb = new StringBuilder();
+        for (byte b : data)
+            sb.append(String.format("%02x ", b & 0xff));
+        return sb.toString();
+    }
+
+    @Override
+    public String toString() {
+        return super.toString() + String.format("[hasMore=%s data=[ %s]]", hasMore, hex());
+    }
 }

@@ -13,8 +13,34 @@ public class Message implements Queue<Frame> {
         this.frames = new ArrayBlockingQueue<Frame>(8);
     }
 
-    public static Message receiveMessage(Socket socket) {
-        return null;
+    public static Message createMessage(byte[] p1) {
+        Message message = new Message();
+        message.add(Frame.createFrame(p1, false, false));
+        return message;
+    }
+
+    public static Message createMessage(byte[] p1, byte[] p2) {
+        Message message = new Message();
+        message.add(Frame.createFrame(p1, true, false));
+        message.add(Frame.createFrame(p2, false, false));
+        return message;
+    }
+
+    public static Message createMessage(byte[] p1, byte[] p2, byte[] p3) {
+        Message message = new Message();
+        message.add(Frame.createFrame(p1, true, false));
+        message.add(Frame.createFrame(p2, true, false));
+        message.add(Frame.createFrame(p3, false, false));
+        return message;
+    }
+
+    public static Message createMessage(byte[] p1, byte[] p2, byte[] p3, byte[] p4) {
+        Message message = new Message();
+        message.add(Frame.createFrame(p1, true, false));
+        message.add(Frame.createFrame(p2, true, false));
+        message.add(Frame.createFrame(p3, true, false));
+        message.add(Frame.createFrame(p4, false, false));
+        return message;
     }
 
     @Override

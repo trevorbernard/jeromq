@@ -4,6 +4,7 @@ import java.io.Closeable;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.EnumSet;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import zmq.Msg;
 import zmq.SocketBase;
@@ -11,6 +12,7 @@ import zmq.ZMQ;
 
 public class Socket implements Closeable {
     private static final Charset UTF8 = Charset.forName("UTF-8");
+    private final AtomicBoolean isClosed = new AtomicBoolean(false);
 
     private final SocketBase base;
     private final SocketType type;
@@ -92,6 +94,10 @@ public class Socket implements Closeable {
         return this.send(frame.getData(), frame.hasMore() ? SocketFlag.SEND_MORE : SocketFlag.NONE);
     }
 
+    public Frame receiveFrame() {
+        return receiveFrame(SocketFlag.NONE);
+    }
+
     public Frame receiveFrame(SocketFlag flag) {
         byte[] data = this.receive(flag);
         return Frame.createFrame(data, this.hasReceiveMore(), false);
@@ -100,7 +106,8 @@ public class Socket implements Closeable {
     public Message receiveMessage() {
         Message message = new Message();
         do {
-            Frame frame = this.receiveFrame(SocketFlag.NONE);
+            Frame frame = this.receiveFrame();
+            System.out.println(frame);
             message.add(frame);
         } while (!Thread.currentThread().isInterrupted() && this.hasReceiveMore());
         return message;
@@ -111,6 +118,7 @@ public class Socket implements Closeable {
         for (Frame frame : message) {
             size += frame.size();
             this.sendFrame(frame);
+            System.out.println("Send: " + frame);
         }
         return size;
     }
@@ -335,6 +343,8 @@ public class Socket implements Closeable {
 
     @Override
     public void close() {
-        base.close();
+        if (isClosed.compareAndSet(false, true)) {
+            base.close();
+        }
     }
 }
