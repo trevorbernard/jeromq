@@ -2,6 +2,7 @@ package com.zeromq.api;
 
 import java.io.Closeable;
 import java.nio.ByteBuffer;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.zeromq.ZMQException;
@@ -47,9 +48,27 @@ public class ZSocket implements Closeable {
         return socket.bind(endpoint);
     }
 
-    public int send(byte[] buf, int pos, int lim, int flags) {
+    // This looks awkward but should be remedied if/when JeroMQ uses EnumSets
+    private static int calcFlags(Set<SocketFlags> flags) {
+        int f = 0;
+        if (flags != null) {
+            for (SocketFlags flag : flags) {
+                f |= flag.getFlag();
+            }
+        }
+        return f;
+    }
+
+    public int send(byte[] buf, Set<SocketFlags> flags) {
+        final Msg msg = new Msg(buf);
+        socket.send(msg, calcFlags(flags));
+        mayRaise();
+        return msg.size();
+    }
+
+    public int send(byte[] buf, int pos, int lim, Set<SocketFlags> flags) {
         final Msg msg = new Msg(buf, pos, lim);
-        socket.send(msg, flags);
+        socket.send(msg, calcFlags(flags));
         mayRaise();
         return msg.size();
     }
