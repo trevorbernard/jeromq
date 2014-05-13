@@ -12,7 +12,7 @@ import zmq.Msg;
 import zmq.SocketBase;
 
 public class ZSocket implements Closeable {
-    // Lazily Global Context Singleton
+    // Lazy thread safe Context singleton
     private static class ContextHolder {
         private static final Ctx CONTEXT = zmq.ZMQ.zmq_init(1);
     }
