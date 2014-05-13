@@ -1,7 +1,7 @@
 package com.zeromq.api;
 
 public enum SocketType {
-    PUB(1), SUB(2), REQ(3), REP(4), DEALER(5), ROUTER(6), PULL(7), PUSH(8), XPUB(9), XSUB(10);
+    PAIR(0), PUB(1), SUB(2), REQ(3), REP(4), DEALER(5), ROUTER(6), PULL(7), PUSH(8), XPUB(9), XSUB(10);
 
     private int type;
 
