@@ -80,6 +80,21 @@ public class Msg {
         this.buf = ByteBuffer.wrap(src).order(ByteOrder.BIG_ENDIAN);
     }
 
+    public Msg(byte[] b, int pos, int lim) {
+        int length = Math.min((b.length - pos), lim);
+        byte[] src = new byte[length];
+        System.arraycopy(b, pos, src, 0, length);
+        if (src.length <= MAX_VSM_SIZE) {
+            this.type = TYPE_VSM;
+        } else {
+            this.type = TYPE_LMSG;
+        }
+        this.flags = 0;
+        this.size = src.length;
+        this.data = src;
+        this.buf = ByteBuffer.wrap(src).order(ByteOrder.BIG_ENDIAN);
+    }
+
     public Msg(final ByteBuffer src) {
         if (src == null) {
             throw new IllegalArgumentException("ByteBuffer cannot be null");
