@@ -11,9 +11,10 @@ import zmq.Msg;
 import zmq.SocketBase;
 
 public class ZSocket implements Closeable {
-    // Global Context
-    private static final AtomicReference<State> CONTEXT_STATE = new AtomicReference<State>(State.LATENT);
-    private static Ctx ctx;
+    // Lazily Global Context Singleton
+    private static class ContextHolder {
+        private static final Ctx CONTEXT = zmq.ZMQ.zmq_init(1);
+    }
 
     private enum State {
         LATENT, STARTED, STOPPED;
@@ -25,12 +26,13 @@ public class ZSocket implements Closeable {
     private final SocketBase socket;
 
     public ZSocket(SocketType type) {
-        if (CONTEXT_STATE.compareAndSet(State.LATENT, State.STARTED)) {
-            this.ctx = zmq.ZMQ.zmq_init(1);
-        }
         this.type = type;
-        this.socket = this.ctx.create_socket(type.getType());
+        this.socket = getContext().create_socket(type.getType());
         this.state.set(State.STARTED);
+    }
+
+    private Ctx getContext() {
+        return ContextHolder.CONTEXT;
     }
 
     public SocketType getType() {
