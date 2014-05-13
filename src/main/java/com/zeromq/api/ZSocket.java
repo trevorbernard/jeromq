@@ -15,6 +15,17 @@ public class ZSocket implements Closeable {
     // Lazy thread safe Context singleton
     private static class ContextHolder {
         private static final Ctx CONTEXT = zmq.ZMQ.zmq_init(1);
+        static {
+            Runtime.getRuntime().addShutdownHook(new Thread() {
+                @Override
+                public void run() {
+                    try {
+                        CONTEXT.terminate();
+                    } catch (Exception e) {
+                    }
+                }
+            });
+        }
     }
 
     private enum State {
@@ -95,6 +106,10 @@ public class ZSocket implements Closeable {
         int errno = socket.errno();
         if (errno != 0 && errno != zmq.ZError.EAGAIN)
             throw new ZMQException(errno);
+    }
+
+    public boolean isClosed() {
+        return state.get() == State.STOPPED;
     }
 
     @Override
