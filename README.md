@@ -63,9 +63,4 @@ Add it to your Maven project's `pom.xml`:
        </repository>
     </repositories>
 
-If your are using the Ant 
-
-    ant [target]
-
-
 Also please refer the [Wiki](https://github.com/zeromq/jeromq/wiki)
