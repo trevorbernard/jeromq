@@ -5,10 +5,9 @@ import static org.junit.Assert.assertEquals;
 import java.util.EnumSet;
 
 import org.junit.Test;
-
-import com.zeromq.api.SocketFlags;
-import com.zeromq.api.SocketType;
-import com.zeromq.api.ZSocket;
+import org.zeromq.api.SocketFlags;
+import org.zeromq.api.SocketType;
+import org.zeromq.api.ZSocket;
 
 public class ZSocketTest {
     @Test

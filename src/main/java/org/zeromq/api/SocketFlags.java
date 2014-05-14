@@ -1,4 +1,4 @@
-package com.zeromq.api;
+package org.zeromq.api;
 
 public enum SocketFlags {
     NONE(0), DONT_WAIT(1), SEND_MORE(2);

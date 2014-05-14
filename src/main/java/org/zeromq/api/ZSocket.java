@@ -1,4 +1,4 @@
-package com.zeromq.api;
+package org.zeromq.api;
 
 import java.io.Closeable;
 import java.nio.ByteBuffer;
