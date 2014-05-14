@@ -10,11 +10,12 @@ import org.zeromq.ZMQException;
 import zmq.Ctx;
 import zmq.Msg;
 import zmq.SocketBase;
+import zmq.ZMQ;
 
 public class ZSocket implements Closeable {
     // Lazy thread safe Context singleton
     private static class ContextHolder {
-        private static final Ctx CONTEXT = zmq.ZMQ.zmq_init(1);
+        private static final Ctx CONTEXT = ZMQ.zmq_ctx_new();
         static {
             Runtime.getRuntime().addShutdownHook(new Thread() {
                 @Override
