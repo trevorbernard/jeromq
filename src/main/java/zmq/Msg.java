@@ -42,16 +42,14 @@ public class Msg {
     private int flags;
     private byte type;
 
-    private int size;
-    private byte[] data;
-    private ByteBuffer buf;
+    private int capacity;
+    private byte[] byteArray;
+    private ByteBuffer byteBuffer;
 
     public Msg() {
         this.type = TYPE_VSM;
-        this.flags = 0;
-        this.size = 0;
-        this.buf = ByteBuffer.wrap(new byte[0]).order(ByteOrder.BIG_ENDIAN);
-        this.data = buf.array();
+        this.byteArray = new byte[0];
+        this.byteBuffer = ByteBuffer.wrap(byteArray);
     }
 
     public Msg(int capacity) {
@@ -59,40 +57,37 @@ public class Msg {
             this.type = TYPE_VSM;
         else
             this.type = TYPE_LMSG;
-        this.flags = 0;
-        this.size = capacity;
-        this.buf = ByteBuffer.wrap(new byte[capacity]).order(ByteOrder.BIG_ENDIAN);
-        this.data = buf.array();
+        this.capacity = capacity;
+        this.byteArray = new byte[capacity];
+        this.byteBuffer = ByteBuffer.wrap(byteArray).order(ByteOrder.BIG_ENDIAN);
     }
 
-    public Msg(byte[] src) {
-        if (src == null) {
-            src = new byte[0];
+    public Msg(byte[] byteArray) {
+        if (byteArray == null) {
+            byteArray = new byte[0];
         }
-        if (src.length <= MAX_VSM_SIZE) {
+        if (byteArray.length <= MAX_VSM_SIZE) {
             this.type = TYPE_VSM;
         } else {
             this.type = TYPE_LMSG;
         }
-        this.flags = 0;
-        this.size = src.length;
-        this.data = src;
-        this.buf = ByteBuffer.wrap(src).order(ByteOrder.BIG_ENDIAN);
+        this.capacity = byteArray.length;
+        this.byteArray = byteArray;
+        this.byteBuffer = ByteBuffer.wrap(byteArray).order(ByteOrder.BIG_ENDIAN);
     }
 
-    public Msg(byte[] b, int pos, int lim) {
-        int length = Math.min((b.length - pos), lim);
-        byte[] src = new byte[length];
-        System.arraycopy(b, pos, src, 0, length);
-        if (src.length <= MAX_VSM_SIZE) {
+    public Msg(byte[] byteArray, int pos, int lim) {
+        int count = Math.min((byteArray.length - pos), lim);
+        byte[] buf = new byte[count];
+        System.arraycopy(byteArray, pos, buf, 0, count);
+        if (buf.length <= MAX_VSM_SIZE) {
             this.type = TYPE_VSM;
         } else {
             this.type = TYPE_LMSG;
         }
-        this.flags = 0;
-        this.size = src.length;
-        this.data = src;
-        this.buf = ByteBuffer.wrap(src).order(ByteOrder.BIG_ENDIAN);
+        this.capacity = buf.length;
+        this.byteArray = buf;
+        this.byteBuffer = ByteBuffer.wrap(buf).order(ByteOrder.BIG_ENDIAN);
     }
 
     public Msg(final ByteBuffer src) {
@@ -104,23 +99,30 @@ public class Msg {
         }
         this.type = TYPE_LMSG;
         this.flags = 0;
-        this.buf = src.duplicate();
-        if (buf.hasArray())
-            this.data = buf.array();
+        this.byteBuffer = src.duplicate();
+        if (byteBuffer.hasArray())
+            this.byteArray = byteBuffer.array();
         else
-            this.data = null;
-        this.size = buf.remaining();
+            this.byteArray = null;
+        this.capacity = byteBuffer.remaining();
     }
 
-    public Msg(final Msg m) {
-        if (m == null)
+    public Msg(final Msg msg) {
+        if (msg == null) {
             throw new IllegalArgumentException("Msg cannot be null");
-        this.type = m.type;
-        this.flags = m.flags;
-        this.size = m.size;
-        this.buf = m.buf != null ? m.buf.duplicate() : null;
-        this.data = new byte[this.size];
-        System.arraycopy(m.data, 0, this.data, 0, m.size);
+        }
+        this.type = msg.type;
+        this.flags = msg.flags;
+        this.capacity = msg.capacity;
+        this.byteBuffer = msg.byteBuffer != null ? msg.byteBuffer.duplicate() : null;
+        this.byteArray = new byte[this.capacity];
+        System.arraycopy(msg.byteArray, 0, this.byteArray, 0, msg.capacity);
+    }
+
+    public static Msg createDelimiter() {
+        final Msg msg = new Msg();
+        msg.type = TYPE_DELIMITER;
+        return msg;
     }
 
     public boolean isIdentity() {
@@ -165,42 +167,40 @@ public class Msg {
     }
 
     public byte[] data() {
-        if (buf.isDirect()) {
-            int length = buf.remaining();
+        if (byteBuffer.isDirect()) {
+            int length = byteBuffer.remaining();
             byte[] bytes = new byte[length];
-            buf.duplicate().get(bytes);
+            byteBuffer.duplicate().get(bytes);
             return bytes;
         }
-        return data;
+        return byteArray;
     }
 
     public ByteBuffer buf() {
-        return buf.duplicate();
+        final ByteBuffer duplicate;
+        if (null == byteBuffer) {
+            if (null != byteArray) {
+                duplicate = ByteBuffer.wrap(byteArray);
+            } else {
+                return ByteBuffer.allocate(0);
+            }
+        } else {
+            duplicate = byteBuffer.duplicate();
+        }
+        duplicate.clear();
+        return duplicate;
     }
 
     public int size() {
-        return size;
+        return capacity;
     }
 
     public void resetFlags(int f) {
         flags = flags & ~f;
     }
 
-    public byte get() {
-        return buf.get();
-    }
-
-    public byte get(int index) {
-        return buf.get(index);
-    }
-
     public Msg put(byte b) {
-        buf.put(b);
-        return this;
-    }
-
-    public Msg put(int index, byte b) {
-        buf.put(index, b);
+        byteBuffer.put(b);
         return this;
     }
 
@@ -211,36 +211,24 @@ public class Msg {
     public Msg put(byte[] src, int off, int len) {
         if (src == null)
             return this;
-        buf.put(src, off, len);
-        return this;
-    }
-
-    public Msg put(ByteBuffer src) {
-        buf.put(src);
+        byteBuffer.put(src, off, len);
         return this;
     }
 
     public int getBytes(int index, byte[] dst, int off, int len) {
-        int count = Math.min(len, size);
-        if (buf.isDirect()) {
-            ByteBuffer dup = buf.duplicate();
+        int count = Math.min(len, capacity);
+        if (byteBuffer.isDirect()) {
+            ByteBuffer dup = byteBuffer.duplicate();
             dup.position(index);
             dup.put(dst, off, count);
             return count;
         }
-        System.arraycopy(data, index, dst, off, count);
-        return count;
-    }
-
-    public int getBytes(int index, ByteBuffer bb, int len) {
-        int count = Math.min(bb.remaining(), size - index);
-        count = Math.min(count, len);
-        bb.put(buf);
+        System.arraycopy(byteArray, index, dst, off, count);
         return count;
     }
 
     @Override
     public String toString() {
-        return String.format("#zmq.Msg{type=%s, size=%s, flags=%s}", type, size, flags);
+        return String.format("#zmq.Msg{type=%s, size=%s, flags=%s}", type, capacity, flags);
     }
 }
