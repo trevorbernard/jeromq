@@ -15,6 +15,12 @@ public class TestZContext {
         Socket s4 = ctx.createSocket(ZMQ.REP);
         Socket s5 = ctx.createSocket(ZMQ.PUB);
         Socket s6 = ctx.createSocket(ZMQ.SUB);
+        s1.connect("tcp://127.0.0.1:5555");
+        s2.connect("tcp://127.0.0.1:5555");
+        s3.connect("tcp://127.0.0.1:5555");
+        s4.connect("tcp://127.0.0.1:5555");
+        s5.connect("tcp://127.0.0.1:5555");
+        s6.connect("tcp://127.0.0.1:5555");
         ctx.close();
         Assert.assertEquals(0, ctx.getSockets().size());
     }
