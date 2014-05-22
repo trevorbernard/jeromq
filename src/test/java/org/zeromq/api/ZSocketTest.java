@@ -20,7 +20,7 @@ public class ZSocketTest {
             pull.bind("tcp://*:1337");
             push.connect("tcp://localhost:1337");
             push.send("world".getBytes(), EnumSet.noneOf(SocketFlags.class));
-            byte[] actual = pull.receive(0);
+            byte[] actual = pull.receive();
             assertEquals("world", new String(actual));
         } finally {
             try {
@@ -47,8 +47,7 @@ public class ZSocketTest {
             byte[] b = "hello".getBytes();
             push.send(b, EnumSet.of(SocketFlags.SEND_MORE));
 
-            byte[] actual = pull.receive(0);
-            System.out.println("**" + new String(actual));
+            byte[] actual = pull.receive();
             assertEquals("world", new String(actual));
 
         } finally {
