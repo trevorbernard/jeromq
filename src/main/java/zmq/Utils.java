@@ -15,7 +15,7 @@
 
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 package zmq;
 
 import java.io.File;
@@ -29,109 +29,142 @@ import java.nio.channels.SocketChannel;
 import java.security.SecureRandom;
 import java.util.List;
 
-public class Utils {
+public class Utils
+{
 
     private static SecureRandom random = new SecureRandom();
-    
-    public static int generate_random() {
+
+    public static int generate_random()
+    {
         return random.nextInt();
     }
 
-    public static void tune_tcp_socket(SocketChannel ch) throws SocketException {
+    public static void tune_tcp_socket(final SocketChannel ch)
+                                                              throws SocketException
+    {
         tune_tcp_socket(ch.socket());
     }
-    
-    public static void tune_tcp_socket(Socket fd) throws SocketException 
+
+    public static void tune_tcp_socket(final Socket fd) throws SocketException
     {
-        //  Disable Nagle's algorithm. We are doing data batching on 0MQ level,
-        //  so using Nagle wouldn't improve throughput in anyway, but it would
-        //  hurt latency.
+        // Disable Nagle's algorithm. We are doing data batching on 0MQ level,
+        // so using Nagle wouldn't improve throughput in anyway, but it would
+        // hurt latency.
         try {
-            fd.setTcpNoDelay (true);
-        } catch (SocketException e) {
+            fd.setTcpNoDelay(true);
+        }
+        catch (final SocketException e) {
         }
     }
 
-    
-    public static void tune_tcp_keepalives(SocketChannel ch, int tcp_keepalive,
-            int tcp_keepalive_cnt, int tcp_keepalive_idle,
-            int tcp_keepalive_intvl) throws SocketException {
+    public static void tune_tcp_keepalives(final SocketChannel ch,
+                                           final int tcp_keepalive,
+                                           final int tcp_keepalive_cnt,
+                                           final int tcp_keepalive_idle,
+                                           final int tcp_keepalive_intvl)
+                                                                         throws SocketException
+    {
 
         tune_tcp_keepalives(ch.socket(), tcp_keepalive, tcp_keepalive_cnt,
-                tcp_keepalive_idle, tcp_keepalive_intvl);
+                            tcp_keepalive_idle, tcp_keepalive_intvl);
     }
-    
-    public static void tune_tcp_keepalives(Socket fd, int tcp_keepalive,
-            int tcp_keepalive_cnt, int tcp_keepalive_idle,
-            int tcp_keepalive_intvl) throws SocketException {
+
+    public static void tune_tcp_keepalives(final Socket fd,
+                                           final int tcp_keepalive,
+                                           final int tcp_keepalive_cnt,
+                                           final int tcp_keepalive_idle,
+                                           final int tcp_keepalive_intvl)
+                                                                         throws SocketException
+    {
 
         if (tcp_keepalive == 1) {
             fd.setKeepAlive(true);
-        } else if (tcp_keepalive == 0) {
+        }
+        else if (tcp_keepalive == 0) {
             fd.setKeepAlive(false);
         }
     }
-    
-    public static void unblock_socket(SelectableChannel s) throws IOException {
+
+    public static void unblock_socket(final SelectableChannel s)
+                                                                throws IOException
+    {
         s.configureBlocking(false);
     }
-    
-    @SuppressWarnings("unchecked")
-    public static <T> T[] realloc(Class<T> klass, T[] src, int size, boolean ended) {
-        T[] dest;
-        
-        if (size > src.length) {
-            dest = (T[])(Array.newInstance(klass, size));
-            if (ended)
-                System.arraycopy(src, 0, dest, 0, src.length);
-            else
-                System.arraycopy(src, 0, dest, size-src.length, src.length);
-        } else if (size < src.length) {
-            dest = (T[])(Array.newInstance(klass, size));
-            if (ended)
-                System.arraycopy(src, src.length - size, dest, 0, size);
-            else
-                System.arraycopy(src, 0, dest, 0, size);
 
-        } else {
+    @SuppressWarnings("unchecked")
+    public static <T> T[] realloc(final Class<T> klass, final T[] src,
+                                  final int size, final boolean ended)
+    {
+        T[] dest;
+
+        if (size > src.length) {
+            dest = (T[]) (Array.newInstance(klass, size));
+            if (ended) {
+                System.arraycopy(src, 0, dest, 0, src.length);
+            }
+            else {
+                System.arraycopy(src, 0, dest, size - src.length, src.length);
+            }
+        }
+        else if (size < src.length) {
+            dest = (T[]) (Array.newInstance(klass, size));
+            if (ended) {
+                System.arraycopy(src, src.length - size, dest, 0, size);
+            }
+            else {
+                System.arraycopy(src, 0, dest, 0, size);
+            }
+
+        }
+        else {
             dest = src;
         }
         return dest;
     }
-    
-    public static <T> void swap(List<T> items, int index1_, int index2_) {
-        if (index1_ == index2_) 
+
+    public static <T> void swap(final List<T> items, final int index1_,
+                                final int index2_)
+    {
+        if (index1_ == index2_) {
             return;
-                    
-        T item1 = items.get(index1_);
-        T item2 = items.get(index2_);
-        if (item1 != null)
+        }
+
+        final T item1 = items.get(index1_);
+        final T item2 = items.get(index2_);
+        if (item1 != null) {
             items.set(index2_, item1);
-        if (item2 != null)
+        }
+        if (item2 != null) {
             items.set(index1_, item2);
+        }
     }
 
-    public static byte[] bytes(ByteBuffer buf) {
-        byte[] d = new byte[buf.limit()];
+    public static byte[] bytes(final ByteBuffer buf)
+    {
+        final byte[] d = new byte[buf.limit()];
         buf.get(d);
         return d;
     }
 
-    public static byte[] realloc(byte[] src, int size) {
+    public static byte[] realloc(final byte[] src, final int size)
+    {
 
-        byte[] dest = new byte[size];
-        if (src != null)
+        final byte[] dest = new byte[size];
+        if (src != null) {
             System.arraycopy(src, 0, dest, 0, src.length);
-        
+        }
+
         return dest;
     }
 
-    public static boolean delete(File path) {
-        if (!path.exists())
-            return false; 
+    public static boolean delete(final File path)
+    {
+        if (!path.exists()) {
+            return false;
+        }
         boolean ret = true;
-        if (path.isDirectory()){
-            for (File f : path.listFiles()){
+        if (path.isDirectory()) {
+            for (final File f : path.listFiles()) {
                 ret = ret && delete(f);
             }
         }

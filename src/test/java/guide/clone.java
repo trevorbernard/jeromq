@@ -1,5 +1,8 @@
 package guide;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.zeromq.ZContext;
 import org.zeromq.ZMQ;
 import org.zeromq.ZMQ.PollItem;
@@ -9,18 +12,15 @@ import org.zeromq.ZMsg;
 import org.zeromq.ZThread;
 import org.zeromq.ZThread.IAttachedRunnable;
 
-import java.util.HashMap;
-import java.util.Map;
-
 public class clone
 {
-    private ZContext ctx;                //  Our context wrapper
-    private Socket pipe;                 //  Pipe through to clone agent
+    private final ZContext ctx; // Our context wrapper
+    private final Socket pipe; // Pipe through to clone agent
 
-    //  .split constructor and destructor
-    //  Here are the constructor and destructor for the clone class. Note that
-    //  we create a context specifically for the pipe that connects our
-    //  frontend to the backend agent:
+    // .split constructor and destructor
+    // Here are the constructor and destructor for the clone class. Note that
+    // we create a context specifically for the pipe that connects our
+    // frontend to the backend agent:
     public clone()
     {
         ctx = new ZContext();
@@ -32,37 +32,37 @@ public class clone
         ctx.destroy();
     }
 
-    //  .split subtree method
-    //  Specify subtree for snapshot and updates, which we must do before
-    //  connecting to a server as the subtree specification is sent as the
-    //  first command to the server. Sends a [SUBTREE][subtree] command to
-    //  the agent:
-    public void subtree(String subtree)
+    // .split subtree method
+    // Specify subtree for snapshot and updates, which we must do before
+    // connecting to a server as the subtree specification is sent as the
+    // first command to the server. Sends a [SUBTREE][subtree] command to
+    // the agent:
+    public void subtree(final String subtree)
     {
-        ZMsg msg = new ZMsg();
+        final ZMsg msg = new ZMsg();
         msg.add("SUBTREE");
         msg.add(subtree);
         msg.send(pipe);
     }
 
-    //  .split connect method
-    //  Connect to a new server endpoint. We can connect to at most two
-    //  servers. Sends [CONNECT][endpoint][service] to the agent:
-    public void connect(String address, String service)
+    // .split connect method
+    // Connect to a new server endpoint. We can connect to at most two
+    // servers. Sends [CONNECT][endpoint][service] to the agent:
+    public void connect(final String address, final String service)
     {
-        ZMsg msg = new ZMsg();
+        final ZMsg msg = new ZMsg();
         msg.add("CONNECT");
         msg.add(address);
         msg.add(service);
         msg.send(pipe);
     }
 
-    //  .split set method
-    //  Set a new value in the shared hashmap. Sends a [SET][key][value][ttl]
-    //  command through to the agent which does the actual work:
-    public void set(String key, String value, int ttl)
+    // .split set method
+    // Set a new value in the shared hashmap. Sends a [SET][key][value][ttl]
+    // command through to the agent which does the actual work:
+    public void set(final String key, final String value, final int ttl)
     {
-        ZMsg msg = new ZMsg();
+        final ZMsg msg = new ZMsg();
         msg.add("SET");
         msg.add(key);
         msg.add(value);
@@ -70,38 +70,42 @@ public class clone
         msg.send(pipe);
     }
 
-    //  .split get method
-    //  Look up value in distributed hash table. Sends [GET][key] to the agent and
-    //  waits for a value response. If there is no value available, will eventually
-    //  return NULL:
-    public String get(String key)
+    // .split get method
+    // Look up value in distributed hash table. Sends [GET][key] to the agent
+    // and
+    // waits for a value response. If there is no value available, will
+    // eventually
+    // return NULL:
+    public String get(final String key)
     {
-        ZMsg msg = new ZMsg();
+        final ZMsg msg = new ZMsg();
         msg.add("GET");
         msg.add(key);
         msg.send(pipe);
 
-        ZMsg reply = ZMsg.recvMsg(pipe);
+        final ZMsg reply = ZMsg.recvMsg(pipe);
         if (reply != null) {
-            String value = reply.popString();
+            final String value = reply.popString();
             reply.destroy();
             return value;
         }
         return null;
     }
 
-    //  .split working with servers
-    //  The backend agent manages a set of servers, which we implement using
-    //  our simple class model:
-    private static class Server {
-        private String address;            //  Server address
-        private int port;                  //  Server port
-        private Socket snapshot;           //  Snapshot socket
-        private Socket subscriber;         //  Incoming updates
-        private long expiry;               //  When server expires
-        private int requests;              //  How many snapshot requests made?
+    // .split working with servers
+    // The backend agent manages a set of servers, which we implement using
+    // our simple class model:
+    private static class Server
+    {
+        private final String address; // Server address
+        private final int port; // Server port
+        private final Socket snapshot; // Snapshot socket
+        private final Socket subscriber; // Incoming updates
+        private long expiry; // When server expires
+        private int requests; // How many snapshot requests made?
 
-        protected Server(ZContext ctx, String address, int port, String subtree)
+        protected Server(final ZContext ctx, final String address,
+                         final int port, final String subtree)
         {
             System.out.printf("I: adding server %s:%d...\n", address, port);
             this.address = address;
@@ -119,33 +123,36 @@ public class clone
         }
     }
 
-    //  .split backend agent class
-    //  Here is the implementation of the backend agent itself:
+    // .split backend agent class
+    // Here is the implementation of the backend agent itself:
 
-    //  Number of servers to which we will talk to
-    private final static int SERVER_MAX   =  2;
+    // Number of servers to which we will talk to
+    private final static int SERVER_MAX = 2;
 
-    //  Server considered dead if silent for this long
-    private final static int SERVER_TTL   =   5000;    //  msecs
+    // Server considered dead if silent for this long
+    private final static int SERVER_TTL = 5000; // msecs
 
-    //  States we can be in
-    private final static int STATE_INITIAL   =  0;   //  Before asking server for state
-    private final static int STATE_SYNCING   =  1;   //  Getting state from server
-    private final static int STATE_ACTIVE    =  2;   //  Getting new updates from server
+    // States we can be in
+    private final static int STATE_INITIAL = 0; // Before asking server for
+                                                // state
+    private final static int STATE_SYNCING = 1; // Getting state from server
+    private final static int STATE_ACTIVE = 2; // Getting new updates from
+                                               // server
 
-    private static class Agent {
-        private ZContext ctx;                //  Context wrapper
-        private Socket pipe;                 //  Pipe back to application
-        private Map<String, String> kvmap;   //  Actual key/value table
-        private String subtree;              //  Subtree specification, if any
-        private Server[] server;
-        private int nbrServers;              //  0 to SERVER_MAX
-        private int state;                   //  Current state
-        private int curServer;               //  If active, server 0 or 1
-        private long sequence;               //  Last kvmsg processed
-        private Socket publisher;            //  Outgoing updates
+    private static class Agent
+    {
+        private final ZContext ctx; // Context wrapper
+        private final Socket pipe; // Pipe back to application
+        private final Map<String, String> kvmap; // Actual key/value table
+        private String subtree; // Subtree specification, if any
+        private final Server[] server;
+        private int nbrServers; // 0 to SERVER_MAX
+        private int state; // Current state
+        private int curServer; // If active, server 0 or 1
+        private long sequence; // Last kvmsg processed
+        private final Socket publisher; // Outgoing updates
 
-        protected Agent (ZContext ctx, Socket pipe)
+        protected Agent(final ZContext ctx, final Socket pipe)
         {
             this.ctx = ctx;
             this.pipe = pipe;
@@ -159,49 +166,56 @@ public class clone
 
         protected void destroy()
         {
-            for (int serverNbr = 0; serverNbr < nbrServers; serverNbr++)
+            for (int serverNbr = 0; serverNbr < nbrServers; serverNbr++) {
                 server[serverNbr].destroy();
+            }
         }
 
-        //  .split handling a control message
-        //  Here we handle the different control messages from the frontend;
-        //  SUBTREE, CONNECT, SET, and GET:
+        // .split handling a control message
+        // Here we handle the different control messages from the frontend;
+        // SUBTREE, CONNECT, SET, and GET:
         private boolean controlMessage()
         {
-            ZMsg msg = ZMsg.recvMsg(pipe);
-            String command = msg.popString();
-            if (command == null)
-                return false;      //  Interrupted
+            final ZMsg msg = ZMsg.recvMsg(pipe);
+            final String command = msg.popString();
+            if (command == null) {
+                return false; // Interrupted
+            }
 
             if (command.equals("SUBTREE")) {
                 subtree = msg.popString();
             }
-            else
-            if (command.equals("CONNECT")) {
-                String address = msg.popString();
-                String service = msg.popString();
+            else if (command.equals("CONNECT")) {
+                final String address = msg.popString();
+                final String service = msg.popString();
                 if (nbrServers < SERVER_MAX) {
-                    server [nbrServers++] = new Server(
-                            ctx, address, Integer.parseInt(service), subtree);
-                    //  We broadcast updates to all known servers
+                    server[nbrServers++] = new Server(
+                                                      ctx,
+                                                      address,
+                                                      Integer.parseInt(service),
+                                                      subtree);
+                    // We broadcast updates to all known servers
                     publisher.connect(String.format("%s:%d",
-                            address, Integer.parseInt(service) + 2));
+                                                    address,
+                                                    Integer.parseInt(service) + 2));
                 }
-                else
-                    System.out.printf("E: too many servers (max. %d)\n", SERVER_MAX);
+                else {
+                    System.out.printf("E: too many servers (max. %d)\n",
+                                      SERVER_MAX);
+                }
             }
             else
-            //  .split set and get commands
-            //  When we set a property, we push the new key-value pair onto
-            //  all our connected servers:
+            // .split set and get commands
+            // When we set a property, we push the new key-value pair onto
+            // all our connected servers:
             if (command.equals("SET")) {
-                String key = msg.popString();
-                String value = msg.popString();
-                String ttl = msg.popString();
+                final String key = msg.popString();
+                final String value = msg.popString();
+                final String ttl = msg.popString();
                 kvmap.put(key, value);
 
-                //  Send key-value pair on to server
-                kvmsg kvmsg = new kvmsg(0);
+                // Send key-value pair on to server
+                final kvmsg kvmsg = new kvmsg(0);
                 kvmsg.setKey(key);
                 kvmsg.setUUID();
                 kvmsg.fmtBody("%s", value);
@@ -209,14 +223,15 @@ public class clone
                 kvmsg.send(publisher);
                 kvmsg.destroy();
             }
-            else
-            if (command.equals("GET")) {
-                String key = msg.popString();
-                String value = kvmap.get(key);
-                if (value != null)
+            else if (command.equals("GET")) {
+                final String key = msg.popString();
+                final String value = kvmap.get(key);
+                if (value != null) {
                     pipe.send(value);
-                else
+                }
+                else {
                     pipe.send("");
+                }
             }
             msg.destroy();
 
@@ -228,25 +243,25 @@ public class clone
     {
 
         @Override
-        public void run(Object[] args, ZContext ctx, Socket pipe)
+        public void run(final Object[] args, final ZContext ctx,
+                        final Socket pipe)
         {
-            Agent self = new Agent(ctx, pipe);
+            final Agent self = new Agent(ctx, pipe);
 
             while (!Thread.currentThread().isInterrupted()) {
-                PollItem[] pollItems = {
-                        new PollItem(pipe, Poller.POLLIN),
-                        null
-                };
+                final PollItem[] pollItems = {
+                                              new PollItem(pipe, Poller.POLLIN),
+                                              null };
                 long pollTimer = -1;
                 int pollSize = 2;
-                Server server = self.server[self.curServer];
+                final Server server = self.server[self.curServer];
                 switch (self.state) {
                 case STATE_INITIAL:
-                    //  In this state we ask the server for a snapshot,
-                    //  if we have a server to talk to...
+                    // In this state we ask the server for a snapshot,
+                    // if we have a server to talk to...
                     if (self.nbrServers > 0) {
                         System.out.printf("I: waiting for server at %s:%d...\n",
-                                server.address, server.port);
+                                          server.address, server.port);
                         if (server.requests < 2) {
                             server.snapshot.sendMore("ICANHAZ?");
                             server.snapshot.send(self.subtree);
@@ -254,78 +269,84 @@ public class clone
                         }
                         server.expiry = System.currentTimeMillis() + SERVER_TTL;
                         self.state = STATE_SYNCING;
-                        pollItems[1] = new PollItem(server.snapshot, Poller.POLLIN);
+                        pollItems[1] = new PollItem(server.snapshot,
+                                                    Poller.POLLIN);
                     }
-                    else
+                    else {
                         pollSize = 1;
+                    }
                     break;
 
                 case STATE_SYNCING:
-                    //  In this state we read from snapshot and we expect
-                    //  the server to respond, else we fail over.
+                    // In this state we read from snapshot and we expect
+                    // the server to respond, else we fail over.
                     pollItems[1] = new PollItem(server.snapshot, Poller.POLLIN);
                     break;
 
                 case STATE_ACTIVE:
-                    //  In this state we read from subscriber and we expect
-                    //  the server to give hugz, else we fail over.
-                    pollItems[1] = new PollItem(server.subscriber, Poller.POLLIN);
+                    // In this state we read from subscriber and we expect
+                    // the server to give hugz, else we fail over.
+                    pollItems[1] = new PollItem(server.subscriber,
+                                                Poller.POLLIN);
                     break;
                 }
                 if (server != null) {
                     pollTimer = server.expiry - System.currentTimeMillis();
-                    if (pollTimer < 0)
+                    if (pollTimer < 0) {
                         pollTimer = 0;
+                    }
                 }
-                //  .split client poll loop
-                //  We're ready to process incoming messages; if nothing at all
-                //  comes from our server within the timeout, that means the
-                //  server is dead:
-                int rc = ZMQ.poll(pollItems, pollSize, pollTimer);
-                if (rc == -1)
-                    break;              //  Context has been shut down
+                // .split client poll loop
+                // We're ready to process incoming messages; if nothing at all
+                // comes from our server within the timeout, that means the
+                // server is dead:
+                final int rc = ZMQ.poll(pollItems, pollSize, pollTimer);
+                if (rc == -1) {
+                    break; // Context has been shut down
+                }
 
                 if (pollItems[0].isReadable()) {
-                    if (!self.controlMessage())
-                        break;          //  Interrupted
+                    if (!self.controlMessage()) {
+                        break; // Interrupted
+                    }
                 }
-                else
-                if (pollItems[1].isReadable()) {
-                    kvmsg msg = kvmsg.recv(pollItems[1].getSocket());
-                    if (msg == null)
-                        break;          //  Interrupted
+                else if (pollItems[1].isReadable()) {
+                    final kvmsg msg = kvmsg.recv(pollItems[1].getSocket());
+                    if (msg == null) {
+                        break; // Interrupted
+                    }
 
-                    //  Anything from server resets its expiry time
+                    // Anything from server resets its expiry time
                     server.expiry = System.currentTimeMillis() + SERVER_TTL;
                     if (self.state == STATE_SYNCING) {
-                        //  Store in snapshot until we're finished
+                        // Store in snapshot until we're finished
                         server.requests = 0;
                         if (msg.getKey().equals("KTHXBAI")) {
                             self.sequence = msg.getSequence();
                             self.state = STATE_ACTIVE;
                             System.out.printf("I: received from %s:%d snapshot=%d\n",
-                                    server.address, server.port,
-                                    self.sequence);
+                                              server.address, server.port,
+                                              self.sequence);
                             msg.destroy();
                         }
                     }
-                    else
-                    if (self.state == STATE_ACTIVE) {
-                        //  Discard out-of-sequence updates, incl. hugz
+                    else if (self.state == STATE_ACTIVE) {
+                        // Discard out-of-sequence updates, incl. hugz
                         if (msg.getSequence() > self.sequence) {
                             self.sequence = msg.getSequence();
                             System.out.printf("I: received from %s:%d update=%d\n",
-                                    server.address, server.port,
-                                    self.sequence);
+                                              server.address, server.port,
+                                              self.sequence);
                         }
-                        else
+                        else {
                             msg.destroy();
+                        }
                     }
                 }
                 else {
-                    //  Server has died, failover to next
+                    // Server has died, failover to next
                     System.out.printf("I: server at %s:%d didn't give hugz\n",
-                            server.address, server.port);
+                                      server.address, server.port);
                     self.curServer = (self.curServer + 1) % self.nbrServers;
                     self.state = STATE_INITIAL;
                 }

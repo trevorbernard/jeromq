@@ -17,24 +17,28 @@
 
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 
 package zmq;
 
-import org.junit.*;
+import static org.junit.Assert.assertEquals;
 
 import java.net.InetSocketAddress;
 
-import static org.junit.Assert.assertEquals;
+import org.junit.Test;
 
-public class TcpAddressTest {
+public class TcpAddressTest
+{
     @Test
-    public void parsesIpv6Address() {
-        String addressString = "2000::a1";
-        int port = 9999;
-        TcpAddress address = new TcpAddress("[" + addressString + "]:" + port);
+    public void parsesIpv6Address()
+    {
+        final String addressString = "2000::a1";
+        final int port = 9999;
+        final TcpAddress address = new TcpAddress("[" + addressString + "]:"
+                                                  + port);
 
-        InetSocketAddress expected = new InetSocketAddress(addressString, port);
+        final InetSocketAddress expected = new InetSocketAddress(addressString,
+                                                                 port);
         assertEquals(expected, address.address());
     }
 }

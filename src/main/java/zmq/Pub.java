@@ -17,35 +17,39 @@
 
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 package zmq;
 
-public class Pub extends XPub {
+public class Pub extends XPub
+{
 
-	public static class PubSession extends XPub.XPubSession {
+    public static class PubSession extends XPub.XPubSession
+    {
 
-        public PubSession(IOThread io_thread_, boolean connect_,
-                SocketBase socket_, Options options_, Address addr_) {
+        public PubSession(final IOThread io_thread_, final boolean connect_,
+                          final SocketBase socket_, final Options options_,
+                          final Address addr_)
+        {
             super(io_thread_, connect_, socket_, options_, addr_);
         }
 
     }
 
-    Pub(Ctx parent_, int tid_, int sid_) {
-		super(parent_, tid_, sid_);
-		options.type = ZMQ.ZMQ_PUB;
-	}
-    
+    Pub(final Ctx parent_, final int tid_, final int sid_)
+    {
+        super(parent_, tid_, sid_);
+        options.type = ZMQ.ZMQ_PUB;
+    }
+
     @Override
     protected Msg xrecv()
     {
-        //  Messages cannot be received from PUB socket.
+        // Messages cannot be received from PUB socket.
         throw new UnsupportedOperationException();
     }
 
-
     @Override
-    protected boolean xhas_in ()
+    protected boolean xhas_in()
     {
         return false;
     }

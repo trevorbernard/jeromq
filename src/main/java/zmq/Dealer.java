@@ -17,57 +17,63 @@
 
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 package zmq;
 
-public class Dealer extends SocketBase {
-    
-    public static class DealerSession extends SessionBase {
-        public DealerSession(IOThread io_thread_, boolean connect_,
-            SocketBase socket_, final Options options_,
-            final Address addr_) {
+public class Dealer extends SocketBase
+{
+
+    public static class DealerSession extends SessionBase
+    {
+        public DealerSession(final IOThread io_thread_, final boolean connect_,
+                             final SocketBase socket_, final Options options_,
+                             final Address addr_)
+        {
             super(io_thread_, connect_, socket_, options_, addr_);
         }
     }
-    
-    //  Messages are fair-queued from inbound pipes. And load-balanced to
-    //  the outbound pipes.
+
+    // Messages are fair-queued from inbound pipes. And load-balanced to
+    // the outbound pipes.
     private final FQ fq;
     private final LB lb;
 
-    //  Have we prefetched a message.
+    // Have we prefetched a message.
     private boolean prefetched;
-    
+
     private Msg prefetched_msg;
 
-    //  Holds the prefetched message.
-    public Dealer(Ctx parent_, int tid_, int sid_) {
+    // Holds the prefetched message.
+    public Dealer(final Ctx parent_, final int tid_, final int sid_)
+    {
         super(parent_, tid_, sid_);
-        
+
         prefetched = false;
         options.type = ZMQ.ZMQ_DEALER;
-        
+
         fq = new FQ();
         lb = new LB();
-        //  TODO: Uncomment the following line when DEALER will become true DEALER
-        //  rather than generic dealer socket.
-        //  If the socket is closing we can drop all the outbound requests. There'll
-        //  be noone to receive the replies anyway.
-        //  options.delay_on_close = false;
-            
+        // TODO: Uncomment the following line when DEALER will become true
+        // DEALER
+        // rather than generic dealer socket.
+        // If the socket is closing we can drop all the outbound requests.
+        // There'll
+        // be noone to receive the replies anyway.
+        // options.delay_on_close = false;
+
         options.recv_identity = true;
     }
 
+    @Override
+    protected void xattach_pipe(final Pipe pipe_, final boolean icanhasall_)
+    {
+        assert (pipe_ != null);
+        fq.attach(pipe_);
+        lb.attach(pipe_);
+    }
 
     @Override
-    protected void xattach_pipe(Pipe pipe_, boolean icanhasall_) {
-        assert (pipe_ != null);
-        fq.attach (pipe_);
-        lb.attach (pipe_);
-    }
-    
-    @Override
-    protected boolean xsend(Msg msg_)
+    protected boolean xsend(final Msg msg_)
     {
         return lb.send(msg_, errno);
     }
@@ -81,7 +87,7 @@ public class Dealer extends SocketBase {
     private Msg xxrecv()
     {
         Msg msg_ = null;
-        //  If there is a prefetched message, return it.
+        // If there is a prefetched message, return it.
         if (prefetched) {
             msg_ = prefetched_msg;
             prefetched = false;
@@ -89,55 +95,59 @@ public class Dealer extends SocketBase {
             return msg_;
         }
 
-        //  DEALER socket doesn't use identities. We can safely drop it and 
+        // DEALER socket doesn't use identities. We can safely drop it and
         while (true) {
             msg_ = fq.recv(errno);
-            if (msg_ == null)
+            if (msg_ == null) {
                 return null;
-            if ((msg_.flags() & Msg.IDENTITY) == 0)
+            }
+            if ((msg_.flags() & Msg.IDENTITY) == 0) {
                 break;
+            }
         }
         return msg_;
     }
 
     @Override
-    protected boolean xhas_in ()
+    protected boolean xhas_in()
     {
-        //  We may already have a message pre-fetched.
-        if (prefetched)
+        // We may already have a message pre-fetched.
+        if (prefetched) {
             return true;
+        }
 
-        //  Try to read the next message to the pre-fetch buffer.
+        // Try to read the next message to the pre-fetch buffer.
         prefetched_msg = xxrecv();
-        if (prefetched_msg == null)
+        if (prefetched_msg == null) {
             return false;
+        }
         prefetched = true;
         return true;
     }
 
     @Override
-    protected boolean xhas_out ()
+    protected boolean xhas_out()
     {
-        return lb.has_out ();
+        return lb.has_out();
     }
 
     @Override
-    protected void xread_activated (Pipe pipe_)
+    protected void xread_activated(final Pipe pipe_)
     {
-        fq.activated (pipe_);
+        fq.activated(pipe_);
     }
 
     @Override
-    protected void xwrite_activated (Pipe pipe_)
+    protected void xwrite_activated(final Pipe pipe_)
     {
-        lb.activated (pipe_);
+        lb.activated(pipe_);
     }
 
-
     @Override
-    protected void xterminated(Pipe pipe_) {
-        fq.terminated (pipe_);
-        lb.terminated (pipe_);
+    protected void xterminated(final Pipe pipe_)
+    {
+        fq.terminated(pipe_);
+        lb.terminated(pipe_);
     }
 
 }

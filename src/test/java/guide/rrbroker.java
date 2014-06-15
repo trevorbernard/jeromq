@@ -6,33 +6,34 @@ import org.zeromq.ZMQ.Poller;
 import org.zeromq.ZMQ.Socket;
 
 /**
-* Simple request-reply broker
-*
-*/
-public class rrbroker{
+ * Simple request-reply broker
+ */
+public class rrbroker
+{
 
-    public static void main (String[] args) {
-        //  Prepare our context and sockets
-        Context context = ZMQ.context(1);
+    public static void main(final String[] args)
+    {
+        // Prepare our context and sockets
+        final Context context = ZMQ.context(1);
 
-        Socket frontend = context.socket(ZMQ.ROUTER);
-        Socket backend  = context.socket(ZMQ.DEALER);
+        final Socket frontend = context.socket(ZMQ.ROUTER);
+        final Socket backend = context.socket(ZMQ.DEALER);
         frontend.bind("tcp://*:5559");
         backend.bind("tcp://*:5560");
 
         System.out.println("launch and connect broker.");
 
-        //  Initialize poll set
-        Poller items = new Poller (2);
+        // Initialize poll set
+        final Poller items = new Poller(2);
         items.register(frontend, Poller.POLLIN);
         items.register(backend, Poller.POLLIN);
 
         boolean more = false;
         byte[] message;
 
-        //  Switch messages between sockets
-        while (!Thread.currentThread().isInterrupted()) {            
-            //  poll and memorize multipart detection
+        // Switch messages between sockets
+        while (!Thread.currentThread().isInterrupted()) {
+            // poll and memorize multipart detection
             items.poll();
 
             if (items.pollin(0)) {
@@ -43,7 +44,7 @@ public class rrbroker{
 
                     // Broker it
                     backend.send(message, more ? ZMQ.SNDMORE : 0);
-                    if(!more){
+                    if (!more) {
                         break;
                     }
                 }
@@ -54,14 +55,14 @@ public class rrbroker{
                     message = backend.recv(0);
                     more = backend.hasReceiveMore();
                     // Broker it
-                    frontend.send(message,  more ? ZMQ.SNDMORE : 0);
-                    if(!more){
+                    frontend.send(message, more ? ZMQ.SNDMORE : 0);
+                    if (!more) {
                         break;
                     }
                 }
             }
         }
-        //  We never get here but clean up anyhow
+        // We never get here but clean up anyhow
         frontend.close();
         backend.close();
         context.term();

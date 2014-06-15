@@ -29,7 +29,7 @@ public class ValueReference<V>
 {
     private V value;
 
-    public ValueReference(V value)
+    public ValueReference(final V value)
     {
         this.value = value;
     }
@@ -43,7 +43,7 @@ public class ValueReference<V>
         return value;
     }
 
-    public final void set(V value)
+    public final void set(final V value)
     {
         this.value = value;
     }

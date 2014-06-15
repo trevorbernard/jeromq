@@ -17,7 +17,7 @@
 
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 package zmq;
 
 import java.net.Inet6Address;
@@ -26,71 +26,88 @@ import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.net.UnknownHostException;
 
-public class TcpAddress implements Address.IZAddress {
+public class TcpAddress implements Address.IZAddress
+{
 
-    public static class TcpAddressMask extends TcpAddress {
-        public boolean match_address(SocketAddress addr_) {
-            return address.equals(addr_); 
+    public static class TcpAddressMask extends TcpAddress
+    {
+        public boolean match_address(final SocketAddress addr_)
+        {
+            return address.equals(addr_);
         }
     }
 
     protected InetSocketAddress address;
-    
-    public TcpAddress(String addr_) {
+
+    public TcpAddress(final String addr_)
+    {
         resolve(addr_, false);
     }
-    public TcpAddress() {
+
+    public TcpAddress()
+    {
     }
-    
+
     @Override
-    public String toString() {
+    public String toString()
+    {
         if (address == null) {
             return "";
         }
-        
+
         if (address.getAddress() instanceof Inet6Address) {
-            return "tcp://[" + address.getAddress().getHostAddress() + "]:" + address.getPort();
-        } else {
-            return "tcp://" + address.getAddress().getHostAddress() + ":" + address.getPort();
+            return "tcp://[" + address.getAddress().getHostAddress() + "]:"
+                   + address.getPort();
         }
-        
+        else {
+            return "tcp://" + address.getAddress().getHostAddress() + ":"
+                   + address.getPort();
+        }
+
     }
-    
-    public int getPort(){
-        if (address != null)
+
+    public int getPort()
+    {
+        if (address != null) {
             return address.getPort();
+        }
         return -1;
     }
 
-    //Used after binding to ephemeral port to update ephemeral port (0) to actual port
-    protected void updatePort(int port){
+    // Used after binding to ephemeral port to update ephemeral port (0) to
+    // actual port
+    protected void updatePort(final int port)
+    {
         address = new InetSocketAddress(address.getAddress(), port);
     }
 
     @Override
-    public void resolve(String name_, boolean ipv4only_) {
-        //  Find the ':' at end that separates address from the port number.
-        int delimiter = name_.lastIndexOf(':');
+    public void resolve(final String name_, final boolean ipv4only_)
+    {
+        // Find the ':' at end that separates address from the port number.
+        final int delimiter = name_.lastIndexOf(':');
         if (delimiter < 0) {
             throw new IllegalArgumentException(name_);
         }
 
-        //  Separate the address/port.
-        String addr_str = name_.substring(0, delimiter); 
-        String port_str = name_.substring(delimiter+1);
-        
-        //  Remove square brackets around the address, if any.
-        if (addr_str.length () >= 2 && addr_str.charAt(0) == '[' &&
-              addr_str.charAt(addr_str.length () - 1) == ']')
-            addr_str = addr_str.substring (1, addr_str.length () - 1);
+        // Separate the address/port.
+        String addr_str = name_.substring(0, delimiter);
+        final String port_str = name_.substring(delimiter + 1);
+
+        // Remove square brackets around the address, if any.
+        if (addr_str.length() >= 2 && addr_str.charAt(0) == '['
+            && addr_str.charAt(addr_str.length() - 1) == ']') {
+            addr_str = addr_str.substring(1, addr_str.length() - 1);
+        }
 
         int port;
-        //  Allow 0 specifically, to detect invalid port error in atoi if not
-        if (port_str.equals("*") || port_str.equals("0"))
-            //  Resolve wildcard to 0 to allow autoselection of port
+        // Allow 0 specifically, to detect invalid port error in atoi if not
+        if (port_str.equals("*") || port_str.equals("0")) {
+            // Resolve wildcard to 0 to allow autoselection of port
             port = 0;
+        }
         else {
-            //  Parse the port number (0 is not a valid port).
+            // Parse the port number (0 is not a valid port).
             port = Integer.parseInt(port_str);
             if (port == 0) {
                 throw new IllegalArgumentException(name_);
@@ -103,17 +120,18 @@ public class TcpAddress implements Address.IZAddress {
             addr_str = "0.0.0.0";
         }
         try {
-            for(InetAddress ia: InetAddress.getAllByName(addr_str)) {
+            for (final InetAddress ia : InetAddress.getAllByName(addr_str)) {
                 if (ipv4only_ && (ia instanceof Inet6Address)) {
                     continue;
                 }
                 addr_net = ia;
                 break;
             }
-        } catch (UnknownHostException e) {
+        }
+        catch (final UnknownHostException e) {
             throw new IllegalArgumentException(e);
         }
-        
+
         if (addr_net == null) {
             throw new IllegalArgumentException(name_);
         }
@@ -123,7 +141,8 @@ public class TcpAddress implements Address.IZAddress {
     }
 
     @Override
-    public SocketAddress address() {
+    public SocketAddress address()
+    {
         return address;
     }
 

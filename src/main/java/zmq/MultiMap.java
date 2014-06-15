@@ -15,7 +15,7 @@
         
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 package zmq;
 
 import java.util.ArrayList;
@@ -26,235 +26,283 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
-public class MultiMap<K extends Comparable<? super K>, V> implements Map<K, V> {
+public class MultiMap<K extends Comparable<? super K>, V> implements Map<K, V>
+{
 
     private long id;
     private final HashMap<Long, V> values;
     private final TreeMap<K, ArrayList<Long>> keys;
 
-    public MultiMap () {
+    public MultiMap()
+    {
         id = 0;
         values = new HashMap<Long, V>();
         keys = new TreeMap<K, ArrayList<Long>>();
     }
-    
-    public class MultiMapEntry implements Map.Entry<K, V> {
 
-        private K key;
+    public class MultiMapEntry implements Map.Entry<K, V>
+    {
+
+        private final K key;
         private V value;
-        public MultiMapEntry(K key, V value) {
+
+        public MultiMapEntry(final K key, final V value)
+        {
             this.key = key;
             this.value = value;
         }
+
         @Override
-        public K getKey() {
+        public K getKey()
+        {
             return key;
         }
 
         @Override
-        public V getValue() {
+        public V getValue()
+        {
             return value;
         }
 
         @Override
-        public V setValue(V value) {
-            V old = this.value;
+        public V setValue(final V value)
+        {
+            final V old = this.value;
             this.value = value;
             return old;
         }
-        
-    }
-    public class MultiMapEntrySet implements Set<Map.Entry<K,V>>, Iterator<Map.Entry<K, V>> {
 
-        private MultiMap<K,V> map;
+    }
+
+    public class MultiMapEntrySet implements Set<Map.Entry<K, V>>,
+                                 Iterator<Map.Entry<K, V>>
+    {
+
+        private final MultiMap<K, V> map;
         private Iterator<Map.Entry<K, ArrayList<Long>>> it;
         private Iterator<Long> iit;
         private K key;
         private long id;
-        public MultiMapEntrySet(MultiMap<K,V> map) {
+
+        public MultiMapEntrySet(final MultiMap<K, V> map)
+        {
             this.map = map;
         }
+
         @Override
-        public boolean add(java.util.Map.Entry<K, V> arg0) {
+        public boolean add(final java.util.Map.Entry<K, V> arg0)
+        {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public boolean addAll(
-                Collection<? extends java.util.Map.Entry<K, V>> arg0) {
+        public boolean addAll(final Collection<? extends java.util.Map.Entry<K, V>> arg0)
+        {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public void clear() {
+        public void clear()
+        {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public boolean contains(Object arg0) {
+        public boolean contains(final Object arg0)
+        {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public boolean containsAll(Collection<?> arg0) {
+        public boolean containsAll(final Collection<?> arg0)
+        {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public boolean isEmpty() {
+        public boolean isEmpty()
+        {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public Iterator<java.util.Map.Entry<K, V>> iterator() {
+        public Iterator<java.util.Map.Entry<K, V>> iterator()
+        {
             it = map.keys.entrySet().iterator();
             return this;
         }
 
         @Override
-        public boolean remove(Object arg0) {
+        public boolean remove(final Object arg0)
+        {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public boolean removeAll(Collection<?> arg0) {
+        public boolean removeAll(final Collection<?> arg0)
+        {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public boolean retainAll(Collection<?> arg0) {
+        public boolean retainAll(final Collection<?> arg0)
+        {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public int size() {
+        public int size()
+        {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public Object[] toArray() {
+        public Object[] toArray()
+        {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public <T> T[] toArray(T[] arg0) {
+        public <T> T[] toArray(final T[] arg0)
+        {
             throw new UnsupportedOperationException();
         }
+
         @Override
-        public boolean hasNext() {
+        public boolean hasNext()
+        {
             if (iit == null || !iit.hasNext()) {
-                
+
                 if (!it.hasNext()) {
                     return false;
                 }
-                
-                Map.Entry<K, ArrayList<Long>> item = it.next();
+
+                final Map.Entry<K, ArrayList<Long>> item = it.next();
                 key = item.getKey();
                 iit = item.getValue().iterator();
-            } 
-            
+            }
+
             return true;
-                
+
         }
+
         @Override
-        public Map.Entry<K, V> next() {
+        public Map.Entry<K, V> next()
+        {
             id = iit.next();
             return new MultiMapEntry(key, map.values.get(id));
         }
-        
+
         @Override
-        public void remove() {
+        public void remove()
+        {
             iit.remove();
             map.values.remove(id);
-            if (map.keys.get(key).isEmpty())
+            if (map.keys.get(key).isEmpty()) {
                 it.remove();
+            }
         }
-        
+
     }
-    
+
     @Override
-    public void clear() {
+    public void clear()
+    {
         keys.clear();
         values.clear();
     }
 
     @Override
-    public boolean containsKey(Object key) {
+    public boolean containsKey(final Object key)
+    {
         return keys.containsKey(key);
     }
 
     @Override
-    public boolean containsValue(Object value) {
+    public boolean containsValue(final Object value)
+    {
         return values.containsValue(value);
     }
 
     @Override
-    public Set<Map.Entry<K, V>> entrySet() {
+    public Set<Map.Entry<K, V>> entrySet()
+    {
         return new MultiMapEntrySet(this);
     }
 
     @Override
-    public V get(Object key) {
-        ArrayList<Long> l = keys.get(key);
-        if (l == null)
+    public V get(final Object key)
+    {
+        final ArrayList<Long> l = keys.get(key);
+        if (l == null) {
             return null;
+        }
         return values.get(l.get(0));
     }
 
     @Override
-    public boolean isEmpty() {
+    public boolean isEmpty()
+    {
         return keys.isEmpty();
     }
 
     @Override
-    public Set<K> keySet() {
+    public Set<K> keySet()
+    {
         return keys.keySet();
     }
 
     @Override
-    public V put(K key, V value) {
+    public V put(final K key, final V value)
+    {
         ArrayList<Long> ids = keys.get(key);
         if (ids == null) {
             ids = new ArrayList<Long>();
             ids.add(id);
             keys.put(key, ids);
-        } else {
+        }
+        else {
             ids.add(id);
         }
         values.put(id, value);
         id++;
-        
+
         return null;
     }
 
     @Override
-    public void putAll(Map<? extends K, ? extends V> src) {
+    public void putAll(final Map<? extends K, ? extends V> src)
+    {
 
-        for (Entry <? extends K, ? extends V> o : src.entrySet ()) {
+        for (final Entry<? extends K, ? extends V> o : src.entrySet()) {
             put(o.getKey(), o.getValue());
         }
     }
 
     @Override
-    public V remove (Object key) 
+    public V remove(final Object key)
     {
-        ArrayList <Long> l = keys.get (key);
-        if (l == null)
+        final ArrayList<Long> l = keys.get(key);
+        if (l == null) {
             return null;
-        V old = values.remove (l.remove(0));
-        if (l.isEmpty ())
-            keys.remove (key);
+        }
+        final V old = values.remove(l.remove(0));
+        if (l.isEmpty()) {
+            keys.remove(key);
+        }
 
         return old;
     }
 
     @Override
-    public int size() {
+    public int size()
+    {
         return values.size();
     }
 
     @Override
-    public Collection<V> values() {
+    public Collection<V> values()
+    {
         return values.values();
     }
 

@@ -17,39 +17,42 @@
         
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 
 package zmq;
 
-import org.junit.Test;
-import static org.junit.Assert.*;
-import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.junit.Assert.assertThat;
 
-public class TestPairIpc {
-    //  Create REQ/ROUTER wiring.
-    
+import org.junit.Test;
+
+public class TestPairIpc
+{
+    // Create REQ/ROUTER wiring.
+
     @Test
-    public void testPairIpc() {
-        
-        Ctx ctx = ZMQ.zmq_init (1);
-        assertThat (ctx, notNullValue());
-        SocketBase sb = ZMQ.zmq_socket (ctx, ZMQ.ZMQ_PAIR);
-        assertThat (sb, notNullValue());
-        boolean brc = ZMQ.zmq_bind (sb, "ipc:///tmp/tester");
-        assertThat (brc , is(true));
-        
-        SocketBase sc = ZMQ.zmq_socket (ctx, ZMQ.ZMQ_PAIR);
-        assertThat (sc, notNullValue());
-        brc = ZMQ.zmq_connect (sc, "ipc:///tmp/tester");
-        assertThat (brc , is(true));
-        
+    public void testPairIpc()
+    {
+
+        final Ctx ctx = ZMQ.zmq_init(1);
+        assertThat(ctx, notNullValue());
+        final SocketBase sb = ZMQ.zmq_socket(ctx, ZMQ.ZMQ_PAIR);
+        assertThat(sb, notNullValue());
+        boolean brc = ZMQ.zmq_bind(sb, "ipc:///tmp/tester");
+        assertThat(brc, is(true));
+
+        final SocketBase sc = ZMQ.zmq_socket(ctx, ZMQ.ZMQ_PAIR);
+        assertThat(sc, notNullValue());
+        brc = ZMQ.zmq_connect(sc, "ipc:///tmp/tester");
+        assertThat(brc, is(true));
+
         Helper.bounce(sb, sc);
 
-        
-        //  Tear down the wiring.
-        ZMQ.zmq_close (sb);
-        ZMQ.zmq_close (sc);
-        ZMQ.zmq_term (ctx);
-        
+        // Tear down the wiring.
+        ZMQ.zmq_close(sb);
+        ZMQ.zmq_close(sc);
+        ZMQ.zmq_term(ctx);
+
     }
 }

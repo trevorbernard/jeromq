@@ -7,34 +7,35 @@ import org.zeromq.ZMQ;
 //  Binds PULL socket to tcp://localhost:5558
 //  Collects results from workers via that socket
 //
-public class tasksink {
+public class tasksink
+{
 
-    public static void main (String[] args) throws Exception {
+    public static void main(final String[] args) throws Exception
+    {
 
-        //  Prepare our context and socket
-        ZMQ.Context context = ZMQ.context(1);
-        ZMQ.Socket receiver = context.socket(ZMQ.PULL);
+        // Prepare our context and socket
+        final ZMQ.Context context = ZMQ.context(1);
+        final ZMQ.Socket receiver = context.socket(ZMQ.PULL);
         receiver.bind("tcp://*:5558");
 
-        //  Wait for start of batch
-        String string = new String(receiver.recv(0), ZMQ.CHARSET);
+        new String(receiver.recv(0), ZMQ.CHARSET);
 
-        //  Start our clock now
-        long tstart = System.currentTimeMillis();
+        // Start our clock now
+        final long tstart = System.currentTimeMillis();
 
-        //  Process 100 confirmations
+        // Process 100 confirmations
         int task_nbr;
-        int total_msec = 0;     //  Total calculated cost in msecs
         for (task_nbr = 0; task_nbr < 100; task_nbr++) {
-            string = new String(receiver.recv(0), ZMQ.CHARSET).trim();
+            new String(receiver.recv(0), ZMQ.CHARSET).trim();
             if ((task_nbr / 10) * 10 == task_nbr) {
                 System.out.print(":");
-            } else {
+            }
+            else {
                 System.out.print(".");
             }
         }
-        //  Calculate and report duration of batch
-        long tend = System.currentTimeMillis();
+        // Calculate and report duration of batch
+        final long tend = System.currentTimeMillis();
 
         System.out.println("\nTotal elapsed time: " + (tend - tstart) + " msec");
         receiver.close();

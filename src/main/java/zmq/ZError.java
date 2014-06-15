@@ -15,37 +15,41 @@
 
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 package zmq;
 
 import java.net.SocketException;
 import java.nio.channels.ClosedChannelException;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
 
+public class ZError
+{
 
-public class ZError  {
-
-    public static class CtxTerminatedException extends RuntimeException {
+    public static class CtxTerminatedException extends RuntimeException
+    {
         private static final long serialVersionUID = -4404921838608052956L;
 
-        public CtxTerminatedException() {
+        public CtxTerminatedException()
+        {
             super();
         }
     }
 
-    public static class InstantiationException extends RuntimeException {
+    public static class InstantiationException extends RuntimeException
+    {
         private static final long serialVersionUID = -4404921838608052955L;
-        
-        public InstantiationException(Throwable cause) {
+
+        public InstantiationException(final Throwable cause)
+        {
             super(cause);
         }
     }
 
-    public static class IOException extends RuntimeException {
+    public static class IOException extends RuntimeException
+    {
         private static final long serialVersionUID = 9202470691157986262L;
 
-        public IOException(java.io.IOException e) {
+        public IOException(final java.io.IOException e)
+        {
             super(e);
         }
     }
@@ -66,7 +70,7 @@ public class ZError  {
     public static final int ENOTCONN = 57;
     public static final int ECONNREFUSED = 61;
     public static final int EHOSTUNREACH = 65;
-    
+
     private static final int ZMQ_HAUSNUMERO = 156384712;
 
     public static final int EFSM = ZMQ_HAUSNUMERO + 51;
@@ -78,17 +82,20 @@ public class ZError  {
     public static final int ESOCKET = ZMQ_HAUSNUMERO + 106;
     public static final int EMFILE = ZMQ_HAUSNUMERO + 107;
 
-    public static int exccode (java.io.IOException e) {
+    public static int exccode(final java.io.IOException e)
+    {
         if (e instanceof SocketException) {
             return ESOCKET;
-        } else if (e instanceof ClosedChannelException) {
+        }
+        else if (e instanceof ClosedChannelException) {
             return ENOTCONN;
-        } else {
+        }
+        else {
             return EIOEXC;
         }
     }
 
-    public static String toString(int code)
+    public static String toString(final int code)
     {
         switch (code) {
         case EADDRINUSE:

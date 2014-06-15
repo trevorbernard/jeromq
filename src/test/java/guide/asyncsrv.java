@@ -1,14 +1,14 @@
 package guide;
 
+import java.util.Random;
+
 import org.zeromq.ZContext;
 import org.zeromq.ZFrame;
 import org.zeromq.ZMQ;
 import org.zeromq.ZMQ.PollItem;
+import org.zeromq.ZMQ.Poller;
 import org.zeromq.ZMQ.Socket;
 import org.zeromq.ZMsg;
-import org.zeromq.ZMQ.Poller;
-
-import java.util.Random;
 
 //
 //Asynchronous client-to-server (DEALER to ROUTER)
@@ -17,37 +17,42 @@ import java.util.Random;
 //it easier to start and stop the example. Each task has its own
 //context and conceptually acts as a separate process.
 
-
 public class asyncsrv
 {
-    //---------------------------------------------------------------------
-    //This is our client task
-    //It connects to the server, and then sends a request once per second
-    //It collects responses as they arrive, and it prints them out. We will
-    //run several client tasks in parallel, each with a different random ID.
+    // ---------------------------------------------------------------------
+    // This is our client task
+    // It connects to the server, and then sends a request once per second
+    // It collects responses as they arrive, and it prints them out. We will
+    // run several client tasks in parallel, each with a different random ID.
 
     private static Random rand = new Random(System.nanoTime());
 
-    private static class client_task implements Runnable {
+    private static class client_task implements Runnable
+    {
 
-        public void run() {
-            ZContext ctx = new ZContext();
-            Socket client = ctx.createSocket(ZMQ.DEALER);
+        @Override
+        public void run()
+        {
+            final ZContext ctx = new ZContext();
+            final Socket client = ctx.createSocket(ZMQ.DEALER);
 
-            //  Set random identity to make tracing easier
-            String identity = String.format("%04X-%04X", rand.nextInt(), rand.nextInt());
+            // Set random identity to make tracing easier
+            final String identity = String.format("%04X-%04X", rand.nextInt(),
+                                                  rand.nextInt());
             client.setIdentity(identity.getBytes(ZMQ.CHARSET));
             client.connect("tcp://localhost:5570");
 
-            PollItem[] items = new PollItem[] { new PollItem(client, Poller.POLLIN) };
+            final PollItem[] items = new PollItem[] { new PollItem(
+                                                                   client,
+                                                                   Poller.POLLIN) };
 
             int requestNbr = 0;
             while (!Thread.currentThread().isInterrupted()) {
-                //  Tick once per second, pulling in arriving messages
+                // Tick once per second, pulling in arriving messages
                 for (int centitick = 0; centitick < 100; centitick++) {
                     ZMQ.poll(items, 10);
                     if (items[0].isReadable()) {
-                        ZMsg msg = ZMsg.recvMsg(client);
+                        final ZMsg msg = ZMsg.recvMsg(client);
                         msg.getLast().print(identity);
                         msg.destroy();
                     }
@@ -58,64 +63,73 @@ public class asyncsrv
         }
     }
 
-    //This is our server task.
-    //It uses the multithreaded server model to deal requests out to a pool
-    //of workers and route replies back to clients. One worker can handle
-    //one request at a time but one client can talk to multiple workers at
-    //once.
+    // This is our server task.
+    // It uses the multithreaded server model to deal requests out to a pool
+    // of workers and route replies back to clients. One worker can handle
+    // one request at a time but one client can talk to multiple workers at
+    // once.
 
-    private static class server_task implements Runnable {
-        public void run() {
-            ZContext ctx = new ZContext();
+    private static class server_task implements Runnable
+    {
+        @Override
+        public void run()
+        {
+            final ZContext ctx = new ZContext();
 
-            //  Frontend socket talks to clients over TCP
-            Socket frontend = ctx.createSocket(ZMQ.ROUTER);
+            // Frontend socket talks to clients over TCP
+            final Socket frontend = ctx.createSocket(ZMQ.ROUTER);
             frontend.bind("tcp://*:5570");
 
-            //  Backend socket talks to workers over inproc
-            Socket backend = ctx.createSocket(ZMQ.DEALER);
+            // Backend socket talks to workers over inproc
+            final Socket backend = ctx.createSocket(ZMQ.DEALER);
             backend.bind("inproc://backend");
 
-            //  Launch pool of worker threads, precise number is not critical
-            for (int threadNbr = 0; threadNbr < 5; threadNbr++)
+            // Launch pool of worker threads, precise number is not critical
+            for (int threadNbr = 0; threadNbr < 5; threadNbr++) {
                 new Thread(new server_worker(ctx)).start();
+            }
 
-            //  Connect backend to frontend via a proxy
+            // Connect backend to frontend via a proxy
             ZMQ.proxy(frontend, backend, null);
 
             ctx.destroy();
         }
     }
 
-    //Each worker task works on one request at a time and sends a random number
-    //of replies back, with random delays between replies:
+    // Each worker task works on one request at a time and sends a random number
+    // of replies back, with random delays between replies:
 
-    private static class server_worker implements Runnable {
-        private ZContext ctx;
+    private static class server_worker implements Runnable
+    {
+        private final ZContext ctx;
 
-        public server_worker(ZContext ctx) {
+        public server_worker(final ZContext ctx)
+        {
             this.ctx = ctx;
         }
 
-        public void run() {
-            Socket worker = ctx.createSocket(ZMQ.DEALER);
+        @Override
+        public void run()
+        {
+            final Socket worker = ctx.createSocket(ZMQ.DEALER);
             worker.connect("inproc://backend");
 
             while (!Thread.currentThread().isInterrupted()) {
-                //  The DEALER socket gives us the address envelope and message
-                ZMsg msg = ZMsg.recvMsg(worker);
-                ZFrame address = msg.pop();
-                ZFrame content = msg.pop();
+                // The DEALER socket gives us the address envelope and message
+                final ZMsg msg = ZMsg.recvMsg(worker);
+                final ZFrame address = msg.pop();
+                final ZFrame content = msg.pop();
                 assert (content != null);
                 msg.destroy();
 
-                //  Send 0..4 replies back
-                int replies = rand.nextInt(5);
+                // Send 0..4 replies back
+                final int replies = rand.nextInt(5);
                 for (int reply = 0; reply < replies; reply++) {
-                    //  Sleep for some fraction of a second
+                    // Sleep for some fraction of a second
                     try {
                         Thread.sleep(rand.nextInt(1000) + 1);
-                    } catch (InterruptedException e) {
+                    }
+                    catch (final InterruptedException e) {
                     }
                     address.send(worker, ZFrame.REUSE + ZFrame.MORE);
                     content.send(worker, ZFrame.REUSE);
@@ -127,17 +141,18 @@ public class asyncsrv
         }
     }
 
-    //The main thread simply starts several clients, and a server, and then
-    //waits for the server to finish.
+    // The main thread simply starts several clients, and a server, and then
+    // waits for the server to finish.
 
-    public static void main(String[] args) throws Exception {
-        ZContext ctx = new ZContext();
+    public static void main(final String[] args) throws Exception
+    {
+        final ZContext ctx = new ZContext();
         new Thread(new client_task()).start();
         new Thread(new client_task()).start();
         new Thread(new client_task()).start();
         new Thread(new server_task()).start();
 
-        //  Run for 5 seconds then quit
+        // Run for 5 seconds then quit
         Thread.sleep(5 * 1000);
         ctx.destroy();
     }

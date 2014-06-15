@@ -17,57 +17,62 @@
             
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 package zmq;
 
-public class Push extends SocketBase {
+public class Push extends SocketBase
+{
 
-    public static class PushSession extends SessionBase {
-        public PushSession(IOThread io_thread_, boolean connect_,
-            SocketBase socket_, final Options options_,
-            final Address addr_) {
+    public static class PushSession extends SessionBase
+    {
+        public PushSession(final IOThread io_thread_, final boolean connect_,
+                           final SocketBase socket_, final Options options_,
+                           final Address addr_)
+        {
             super(io_thread_, connect_, socket_, options_, addr_);
         }
     }
-    
-    //  Load balancer managing the outbound pipes.
+
+    // Load balancer managing the outbound pipes.
     private final LB lb;
-    
-    public Push(Ctx parent_, int tid_, int sid_) {
+
+    public Push(final Ctx parent_, final int tid_, final int sid_)
+    {
         super(parent_, tid_, sid_);
         options.type = ZMQ.ZMQ_PUSH;
-        
+
         lb = new LB();
     }
 
     @Override
-    protected void xattach_pipe(Pipe pipe_, boolean icanhasall_) {
-        assert (pipe_ != null);
-        lb.attach (pipe_);
-    }
-    
-    @Override
-    protected void xwrite_activated (Pipe pipe_)
+    protected void xattach_pipe(final Pipe pipe_, final boolean icanhasall_)
     {
-        lb.activated (pipe_);
-    }
-
-
-    @Override
-    protected void xterminated(Pipe pipe_) {
-        lb.terminated (pipe_);
+        assert (pipe_ != null);
+        lb.attach(pipe_);
     }
 
     @Override
-    public boolean xsend(Msg msg_)
+    protected void xwrite_activated(final Pipe pipe_)
+    {
+        lb.activated(pipe_);
+    }
+
+    @Override
+    protected void xterminated(final Pipe pipe_)
+    {
+        lb.terminated(pipe_);
+    }
+
+    @Override
+    public boolean xsend(final Msg msg_)
     {
         return lb.send(msg_, errno);
     }
-    
+
     @Override
-    protected boolean xhas_out ()
+    protected boolean xhas_out()
     {
-        return lb.has_out ();
+        return lb.has_out();
     }
 
 }

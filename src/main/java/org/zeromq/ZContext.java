@@ -15,25 +15,24 @@
         
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 package org.zeromq;
-
-import zmq.ZError;
-import org.zeromq.ZMQ.Context;
-import org.zeromq.ZMQ.Socket;
 
 import java.io.Closeable;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import org.zeromq.ZMQ.Context;
+import org.zeromq.ZMQ.Socket;
+
+import zmq.ZError;
+
 /**
- * ZContext provides a high-level ZeroMQ context management class
- * 
- * It manages open sockets in the context and automatically closes these before terminating the context.
- * It provides a simple way to set the linger timeout on sockets, and configure contexts for number of I/O threads. 
- * Sets-up signal (interrupt) handling for the process.
- * 
+ * ZContext provides a high-level ZeroMQ context management class It manages
+ * open sockets in the context and automatically closes these before terminating
+ * the context. It provides a simple way to set the linger timeout on sockets,
+ * and configure contexts for number of I/O threads. Sets-up signal (interrupt)
+ * handling for the process.
  */
 
 public class ZContext implements Closeable
@@ -42,41 +41,43 @@ public class ZContext implements Closeable
      * Reference to underlying Context object
      */
     private volatile Context context;
-    
+
     /**
      * List of sockets managed by this ZContext
      */
-    private List<Socket> sockets;
-    
+    private final List<Socket> sockets;
+
     /**
      * Number of io threads allocated to this context, default 1
      */
     private int ioThreads;
-    
+
     /**
      * Linger timeout, default 0
      */
     private int linger;
-    
+
     /**
      * HWM timeout, default 1
      */
     private int hwm;
-    
+
     /**
-     * Indicates if context object is owned by main thread
-     * (useful for multi-threaded applications)
+     * Indicates if context object is owned by main thread (useful for
+     * multi-threaded applications)
      */
     private boolean main;
-    
+
     /**
      * Class Constructor
      */
-    public ZContext() {
+    public ZContext()
+    {
         this(1);
     }
 
-    public ZContext(int ioThreads_) {
+    public ZContext(final int ioThreads_)
+    {
         sockets = new CopyOnWriteArrayList<Socket>();
         ioThreads = ioThreads_;
         linger = 0;
@@ -84,132 +85,150 @@ public class ZContext implements Closeable
     }
 
     /**
-     * Destructor.  Call this to gracefully terminate context and close any managed 0MQ sockets
+     * Destructor. Call this to gracefully terminate context and close any
+     * managed 0MQ sockets
      */
-    public void destroy() {
-        for(Socket socket : sockets) {
+    public void destroy()
+    {
+        for (final Socket socket : sockets) {
             destroySocket(socket);
         }
         sockets.clear();
-        
+
         // Only terminate context if we are on the main thread
-        if (isMain() && context != null)
+        if (isMain() && context != null) {
             context.term();
+        }
 
         context = null;
     }
-    
+
     /**
-     * Creates a new managed socket within this ZContext instance.
-     * Use this to get automatic management of the socket at shutdown
+     * Creates a new managed socket within this ZContext instance. Use this to
+     * get automatic management of the socket at shutdown
      * @param type
-     *          socket type (see ZMQ static class members)
-     * @return
-     *          Newly created Socket object
+     *            socket type (see ZMQ static class members)
+     * @return Newly created Socket object
      */
-    public Socket createSocket(int type) {
+    public Socket createSocket(final int type)
+    {
         // Create and register socket
-        Socket socket = getContext().socket(type);
+        final Socket socket = getContext().socket(type);
         sockets.add(socket);
         return socket;
     }
-    
+
     /**
-     * Destroys managed socket within this context
-     * and remove from sockets list
+     * Destroys managed socket within this context and remove from sockets list
      * @param s
-     *          org.zeromq.Socket object to destroy
+     *            org.zeromq.Socket object to destroy
      */
-    public void destroySocket(Socket s) {
-        if (s == null)
+    public void destroySocket(final Socket s)
+    {
+        if (s == null) {
             return;
-        
+        }
+
         if (sockets.contains(s)) {
             try {
                 s.setLinger(linger);
-            } catch (ZError.CtxTerminatedException e) {}
+            }
+            catch (final ZError.CtxTerminatedException e) {
+            }
             s.close();
             sockets.remove(s);
         }
     }
-    
+
     /**
-     * Creates new shadow context.
-     * Shares same underlying org.zeromq.Context instance but has own list
-     * of managed sockets, io thread count etc. 
-     * @param ctx   Original ZContext to create shadow of
-     * @return  New ZContext
+     * Creates new shadow context. Shares same underlying org.zeromq.Context
+     * instance but has own list of managed sockets, io thread count etc.
+     * @param ctx
+     *            Original ZContext to create shadow of
+     * @return New ZContext
      */
-    public static ZContext shadow(ZContext ctx) {
-        ZContext shadow = new ZContext ();
+    public static ZContext shadow(final ZContext ctx)
+    {
+        final ZContext shadow = new ZContext();
         shadow.setContext(ctx.getContext());
-        shadow.setMain (false);
+        shadow.setMain(false);
 
         return shadow;
     }
-    
+
     /**
      * @return the ioThreads
      */
-    public int getIoThreads() {
+    public int getIoThreads()
+    {
         return ioThreads;
     }
 
     /**
-     * @param ioThreads the ioThreads to set
+     * @param ioThreads
+     *            the ioThreads to set
      */
-    public void setIoThreads(int ioThreads) {
+    public void setIoThreads(final int ioThreads)
+    {
         this.ioThreads = ioThreads;
     }
 
     /**
      * @return the linger
      */
-    public int getLinger() {
+    public int getLinger()
+    {
         return linger;
     }
 
     /**
-     * @param linger the linger to set
+     * @param linger
+     *            the linger to set
      */
-    public void setLinger(int linger) {
+    public void setLinger(final int linger)
+    {
         this.linger = linger;
     }
 
     /**
      * @return the HWM
      */
-    public int getHWM ()
+    public int getHWM()
     {
         return hwm;
     }
 
     /**
-     * @param hwm the HWM to set
+     * @param hwm
+     *            the HWM to set
      */
-    public void setHWM (int hwm) {
+    public void setHWM(final int hwm)
+    {
         this.hwm = hwm;
     }
-
 
     /**
      * @return the main
      */
-    public boolean isMain() {
+    public boolean isMain()
+    {
         return main;
     }
 
     /**
-     * @param main the main to set
+     * @param main
+     *            the main to set
      */
-    public void setMain(boolean main) {
+    public void setMain(final boolean main)
+    {
         this.main = main;
     }
 
     /**
      * @return the context
      */
-    public Context getContext() {
+    public Context getContext()
+    {
         Context result;
         if ((result = context) == null) {
             synchronized (this) {
@@ -222,19 +241,22 @@ public class ZContext implements Closeable
     }
 
     /**
-     * @param ctx   sets the underlying org.zeromq.Context associated with this ZContext wrapper object
+     * @param ctx
+     *            sets the underlying org.zeromq.Context associated with this
+     *            ZContext wrapper object
      */
-    public void setContext (Context ctx) {
+    public void setContext(final Context ctx)
+    {
         this.context = ctx;
     }
-    
+
     /**
      * @return the sockets
      */
-    public List<Socket> getSockets() {
+    public List<Socket> getSockets()
+    {
         return sockets;
     }
-
 
     @Override
     public void close()

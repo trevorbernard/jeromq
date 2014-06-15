@@ -17,7 +17,7 @@
 
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 package perf;
 
 import zmq.Ctx;
@@ -25,12 +25,14 @@ import zmq.Msg;
 import zmq.SocketBase;
 import zmq.ZMQ;
 
-public class LocalThr {
+public class LocalThr
+{
 
-    public static void main(String[] argv) {
+    public static void main(final String[] argv)
+    {
         String bind_to;
         long message_count;
-        int  message_size;
+        int message_size;
         Ctx ctx;
         SocketBase s;
         boolean rc;
@@ -42,104 +44,101 @@ public class LocalThr {
         double megabits;
 
         if (argv.length != 3) {
-            printf ("usage: local_thr <bind-to> <message-size> <message-count>\n");
-            return ;
+            printf("usage: local_thr <bind-to> <message-size> <message-count>\n");
+            return;
         }
-        bind_to = argv [0];
-        message_size = atoi (argv [1]);
-        message_count = atol (argv [2]);
+        bind_to = argv[0];
+        message_size = atoi(argv[1]);
+        message_count = atol(argv[2]);
 
-        ctx = ZMQ.zmq_init (1);
+        ctx = ZMQ.zmq_init(1);
         if (ctx == null) {
-            printf ("error in zmq_init");
-            return ;
+            printf("error in zmq_init");
+            return;
         }
 
-        s = ZMQ.zmq_socket (ctx, ZMQ.ZMQ_PULL);
-        if (s== null) {
-            printf ("error in zmq_socket");
+        s = ZMQ.zmq_socket(ctx, ZMQ.ZMQ_PULL);
+        if (s == null) {
+            printf("error in zmq_socket");
         }
 
-        //  Add your socket options here.
-        //  For example ZMQ_RATE, ZMQ_RECOVERY_IVL and ZMQ_MCAST_LOOP for PGM.
+        // Add your socket options here.
+        // For example ZMQ_RATE, ZMQ_RECOVERY_IVL and ZMQ_MCAST_LOOP for PGM.
 
-        rc = ZMQ.zmq_bind (s, bind_to);
+        rc = ZMQ.zmq_bind(s, bind_to);
         if (!rc) {
-            printf ("error in zmq_bind: %s\n");
+            printf("error in zmq_bind: %s\n");
             return;
         }
         /*
-        msg = ZMQ.zmq_msg_init ();
-        if (msg == null ) {
-            printf ("error in zmq_msg_init: %s\n");
-            return;
-        }
-        */
+         * msg = ZMQ.zmq_msg_init (); if (msg == null ) { printf
+         * ("error in zmq_msg_init: %s\n"); return; }
+         */
 
-        msg = ZMQ.zmq_recvmsg (s, 0);
+        msg = ZMQ.zmq_recvmsg(s, 0);
         if (msg == null) {
-            printf ("error in zmq_recvmsg: %s\n");
+            printf("error in zmq_recvmsg: %s\n");
             return;
         }
         /*
-        if (ZMQ.zmq_msg_size (msg) != message_size) {
-            printf ("message of incorrect size received\n");
-            return;
-        }
-        */
-        
-        watch = ZMQ.zmq_stopwatch_start ();
+         * if (ZMQ.zmq_msg_size (msg) != message_size) { printf
+         * ("message of incorrect size received\n"); return; }
+         */
 
-        for (i = 0; i != message_count-1 ; i++) {
-            msg = ZMQ.zmq_recvmsg (s, 0);
+        watch = ZMQ.zmq_stopwatch_start();
+
+        for (i = 0; i != message_count - 1; i++) {
+            msg = ZMQ.zmq_recvmsg(s, 0);
             if (msg == null) {
-                printf ("error in zmq_recvmsg: %s\n");
-                return ;
+                printf("error in zmq_recvmsg: %s\n");
+                return;
             }
-            if (ZMQ.zmq_msg_size (msg) != message_size) {
-                printf ("message of incorrect size received " + ZMQ.zmq_msg_size(msg));
+            if (ZMQ.zmq_msg_size(msg) != message_size) {
+                printf("message of incorrect size received "
+                       + ZMQ.zmq_msg_size(msg));
                 return;
             }
         }
 
-        elapsed = ZMQ.zmq_stopwatch_stop (watch);
-        if (elapsed == 0)
+        elapsed = ZMQ.zmq_stopwatch_stop(watch);
+        if (elapsed == 0) {
             elapsed = 1;
+        }
 
-        throughput = ( long)
-                ((double) message_count / (double) elapsed * 1000000L);
+        throughput = (long) ((double) message_count / (double) elapsed * 1000000L);
         megabits = (double) (throughput * message_size * 8) / 1000000;
 
-        printf ("message elapsed: %.3f \n", (double) elapsed / 1000000L);
-        printf ("message size: %d [B]\n", (int) message_size);
-        printf ("message count: %d\n", (int) message_count);
-        printf ("mean throughput: %d [msg/s]\n", (int) throughput);
-        printf ("mean throughput: %.3f [Mb/s]\n", (double) megabits);
+        printf("message elapsed: %.3f \n", (double) elapsed / 1000000L);
+        printf("message size: %d [B]\n", message_size);
+        printf("message count: %d\n", (int) message_count);
+        printf("mean throughput: %d [msg/s]\n", (int) throughput);
+        printf("mean throughput: %.3f [Mb/s]\n", megabits);
 
-        ZMQ.zmq_close (s);
+        ZMQ.zmq_close(s);
 
-        ZMQ.zmq_term (ctx);
-
+        ZMQ.zmq_term(ctx);
 
     }
 
-
-    private static void printf(String str, Object ... args) {
+    private static void printf(final String str, final Object... args)
+    {
         // TODO Auto-generated method stub
         System.out.println(String.format(str, args));
-        
+
     }
 
-
-    private static int atoi(String string) {
+    private static int atoi(final String string)
+    {
         return Integer.valueOf(string);
     }
-    
-    private static long atol(String string) {
+
+    private static long atol(final String string)
+    {
         return Long.valueOf(string);
     }
 
-    private static void printf(String string) {
+    private static void printf(final String string)
+    {
         System.out.println(string);
     }
 

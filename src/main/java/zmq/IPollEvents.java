@@ -17,25 +17,25 @@
 
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 
 package zmq;
 
-public interface IPollEvents {
+public interface IPollEvents
+{
     // Called by I/O thread when file descriptor is ready for reading.
-    void in_event () ;
+    void in_event();
 
     // Called by I/O thread when file descriptor is ready for writing.
-    void out_event () ;
+    void out_event();
 
     // Called by I/O thread when file descriptor might be ready for connecting.
-    void connect_event () ;
+    void connect_event();
 
     // Called by I/O thread when file descriptor is ready for accept.
     void accept_event();
-    
-    // Called when timer expires.
-    void timer_event (int id_) ;
 
+    // Called when timer expires.
+    void timer_event(int id_);
 
 }

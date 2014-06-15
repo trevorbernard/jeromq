@@ -17,37 +17,38 @@
 
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 
 package zmq;
 
-import org.junit.Test;
-import static org.junit.Assert.assertThat;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.junit.Assert.assertThat;
+
+import org.junit.Test;
 
 public class TestReqrepInproc
 {
-    //  Create REQ/ROUTER wiring.
+    // Create REQ/ROUTER wiring.
 
     @Test
     public void testReqrepInproc()
     {
-        Ctx ctx = ZMQ.zmq_init(1);
+        final Ctx ctx = ZMQ.zmq_init(1);
         assertThat(ctx, notNullValue());
-        SocketBase sb = ZMQ.zmq_socket(ctx, ZMQ.ZMQ_REP);
+        final SocketBase sb = ZMQ.zmq_socket(ctx, ZMQ.ZMQ_REP);
         assertThat(sb, notNullValue());
         boolean brc = ZMQ.zmq_bind(sb, "inproc://a");
-        assertThat(brc , is(true));
+        assertThat(brc, is(true));
 
-        SocketBase sc = ZMQ.zmq_socket(ctx, ZMQ.ZMQ_REQ);
+        final SocketBase sc = ZMQ.zmq_socket(ctx, ZMQ.ZMQ_REQ);
         assertThat(sc, notNullValue());
         brc = ZMQ.zmq_connect(sc, "inproc://a");
-        assertThat(brc , is(true));
+        assertThat(brc, is(true));
 
         Helper.bounce(sb, sc);
 
-        //  Tear down the wiring.
+        // Tear down the wiring.
         ZMQ.zmq_close(sb);
         ZMQ.zmq_close(sc);
         ZMQ.zmq_term(ctx);

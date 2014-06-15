@@ -16,16 +16,18 @@
 
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 
 package zmq;
 
-public class IpcConnecter extends TcpConnecter {
-    
-    public IpcConnecter (IOThread io_thread_,
-            SessionBase session_, final Options options_,
-            final Address addr_, boolean wait_)  {
-        
-        super (io_thread_, session_, options_, addr_, wait_);
+public class IpcConnecter extends TcpConnecter
+{
+
+    public IpcConnecter(final IOThread io_thread_, final SessionBase session_,
+                        final Options options_, final Address addr_,
+                        final boolean wait_)
+    {
+
+        super(io_thread_, session_, options_, addr_, wait_);
     }
 }

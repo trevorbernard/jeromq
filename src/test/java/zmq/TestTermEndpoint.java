@@ -17,20 +17,21 @@
 
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 package zmq;
 
-import org.junit.Test;
-import static org.junit.Assert.assertThat;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.junit.Assert.assertThat;
+
+import org.junit.Test;
 
 public class TestTermEndpoint
 {
     @Test
     public void testTermEndpoint() throws Exception
     {
-        String ep = "tcp://127.0.0.1:7590";
+        final String ep = "tcp://127.0.0.1:7590";
         Ctx ctx = ZMQ.zmq_init(1);
         assertThat(ctx, notNullValue());
 
@@ -44,8 +45,8 @@ public class TestTermEndpoint
         rc = ZMQ.zmq_connect(pull, ep);
         assertThat(rc, is(true));
 
-        //  Pass one message through to ensure the connection is established.
-        int r = ZMQ.zmq_send(push, "ABC",  0);
+        // Pass one message through to ensure the connection is established.
+        int r = ZMQ.zmq_send(push, "ABC", 0);
         assertThat(r, is(3));
         Msg msg = ZMQ.zmq_recv(pull, 0);
         assertThat(msg.size(), is(3));
@@ -57,16 +58,16 @@ public class TestTermEndpoint
         // Let events some time
         ZMQ.zmq_sleep(1);
 
-        //  Check that sending would block (there's no outbound connection).
-        r = ZMQ.zmq_send(push, "ABC",  ZMQ.ZMQ_DONTWAIT);
+        // Check that sending would block (there's no outbound connection).
+        r = ZMQ.zmq_send(push, "ABC", ZMQ.ZMQ_DONTWAIT);
         assertThat(r, is(-1));
 
-        //  Clean up.
+        // Clean up.
         ZMQ.zmq_close(pull);
         ZMQ.zmq_close(push);
         ZMQ.zmq_term(ctx);
 
-        //  Now the other way round.
+        // Now the other way round.
         System.out.println("disconnect endpoint test running...");
 
         ctx = ZMQ.zmq_init(1);
@@ -82,8 +83,8 @@ public class TestTermEndpoint
         rc = ZMQ.zmq_connect(pull, ep);
         assertThat(rc, is(true));
 
-        //  Pass one message through to ensure the connection is established.
-        r = ZMQ.zmq_send(push, "ABC",  0);
+        // Pass one message through to ensure the connection is established.
+        r = ZMQ.zmq_send(push, "ABC", 0);
         assertThat(r, is(3));
         msg = ZMQ.zmq_recv(pull, 0);
         assertThat(msg.size(), is(3));
@@ -95,11 +96,11 @@ public class TestTermEndpoint
         // Let events some time
         ZMQ.zmq_sleep(1);
 
-        //  Check that sending would block (there's no outbound connection).
-        r = ZMQ.zmq_send(push, "ABC",  ZMQ.ZMQ_DONTWAIT);
+        // Check that sending would block (there's no outbound connection).
+        r = ZMQ.zmq_send(push, "ABC", ZMQ.ZMQ_DONTWAIT);
         assertThat(r, is(-1));
 
-        //  Clean up.
+        // Clean up.
         ZMQ.zmq_close(pull);
         ZMQ.zmq_close(push);
         ZMQ.zmq_term(ctx);

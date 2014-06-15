@@ -17,27 +17,30 @@
         
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 package zmq;
 
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.junit.Assert.assertThat;
 
 import java.util.HashMap;
 
 import org.junit.Test;
-import static org.junit.Assert.*;
-import static org.hamcrest.CoreMatchers.*;
 
-public class TestBlob {
+public class TestBlob
+{
 
     @Test
-    public void testBlobMap() {
-        HashMap<Blob, String> map = new HashMap<Blob, String>();
-        
-        Blob b = Blob.createBlob("a".getBytes(ZMQ.CHARSET), false);
+    public void testBlobMap()
+    {
+        final HashMap<Blob, String> map = new HashMap<Blob, String>();
+
+        final Blob b = Blob.createBlob("a".getBytes(ZMQ.CHARSET), false);
         map.put(b, "aa");
-        
+
         assertThat(map.remove(b), notNullValue());
         assertThat(map.size(), is(0));
     }
-    
+
 }

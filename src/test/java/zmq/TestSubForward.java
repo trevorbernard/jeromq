@@ -17,40 +17,41 @@
 
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 
 package zmq;
 
-import org.junit.Test;
-import static org.junit.Assert.assertThat;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.junit.Assert.assertThat;
+
+import org.junit.Test;
 
 public class TestSubForward
 {
-    //  Create REQ/ROUTER wiring.
+    // Create REQ/ROUTER wiring.
 
     @Test
     public void testSubForward()
     {
-        Ctx ctx = ZMQ.zmq_init(1);
+        final Ctx ctx = ZMQ.zmq_init(1);
         assertThat(ctx, notNullValue());
-        SocketBase xpub = ZMQ.zmq_socket(ctx, ZMQ.ZMQ_XPUB);
+        final SocketBase xpub = ZMQ.zmq_socket(ctx, ZMQ.ZMQ_XPUB);
         assertThat(xpub, notNullValue());
         boolean rc = ZMQ.zmq_bind(xpub, "tcp://127.0.0.1:5570");
 
-        SocketBase xsub = ZMQ.zmq_socket(ctx, ZMQ.ZMQ_XSUB);
+        final SocketBase xsub = ZMQ.zmq_socket(ctx, ZMQ.ZMQ_XSUB);
         assertThat(xsub, notNullValue());
         rc = ZMQ.zmq_bind(xsub, "tcp://127.0.0.1:5571");
         assertThat(rc, is(true));
 
-        SocketBase pub = ZMQ.zmq_socket(ctx, ZMQ.ZMQ_PUB);
+        final SocketBase pub = ZMQ.zmq_socket(ctx, ZMQ.ZMQ_PUB);
         assertThat(pub, notNullValue());
         rc = ZMQ.zmq_connect(pub, "tcp://127.0.0.1:5571");
         assertThat(rc, is(true));
 
-        SocketBase sub = ZMQ.zmq_socket(ctx, ZMQ.ZMQ_SUB);
+        final SocketBase sub = ZMQ.zmq_socket(ctx, ZMQ.ZMQ_SUB);
         assertThat(sub, notNullValue());
         rc = ZMQ.zmq_connect(sub, "tcp://127.0.0.1:5570");
         assertThat(rc, is(true));
@@ -75,7 +76,7 @@ public class TestSubForward
         msg = ZMQ.zmq_recv(sub, 0);
         assertThat(msg, notNullValue());
 
-        //  Tear down the wiring.
+        // Tear down the wiring.
         ZMQ.zmq_close(xpub);
         ZMQ.zmq_close(xsub);
         ZMQ.zmq_close(pub);

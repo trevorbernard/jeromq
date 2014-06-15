@@ -17,36 +17,40 @@
                 
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/  
+ */
 package zmq;
 
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.junit.Assert.assertThat;
 
 import org.junit.Test;
-import static org.junit.Assert.*;
-import static org.hamcrest.CoreMatchers.*;
 
-public class TestLastEndpoint {
+public class TestLastEndpoint
+{
 
-    static void do_bind_and_verify (SocketBase s, String endpoint)
+    static void do_bind_and_verify(final SocketBase s, final String endpoint)
     {
-        boolean brc = ZMQ.zmq_bind (s, endpoint);
-        assertThat (brc, is(true));
+        final boolean brc = ZMQ.zmq_bind(s, endpoint);
+        assertThat(brc, is(true));
 
-        String stest = (String)ZMQ.zmq_getsockoptx (s, ZMQ.ZMQ_LAST_ENDPOINT);
-        assertThat (stest, is(endpoint));
+        final String stest = (String) ZMQ.zmq_getsockoptx(s,
+                                                          ZMQ.ZMQ_LAST_ENDPOINT);
+        assertThat(stest, is(endpoint));
     }
 
     @Test
-    public void testLastEndpoint() {
-        //  Create the infrastructure
-        Ctx ctx = ZMQ.zmq_init (1);
-        assertThat (ctx, notNullValue());
+    public void testLastEndpoint()
+    {
+        // Create the infrastructure
+        final Ctx ctx = ZMQ.zmq_init(1);
+        assertThat(ctx, notNullValue());
 
-        SocketBase sb = ZMQ.zmq_socket (ctx, ZMQ.ZMQ_ROUTER);
-        assertThat (sb, notNullValue());
+        final SocketBase sb = ZMQ.zmq_socket(ctx, ZMQ.ZMQ_ROUTER);
+        assertThat(sb, notNullValue());
 
-        do_bind_and_verify (sb, "tcp://127.0.0.1:5560");
-        do_bind_and_verify (sb, "tcp://127.0.0.1:5561");
-        do_bind_and_verify (sb, "ipc:///tmp/testep");
+        do_bind_and_verify(sb, "tcp://127.0.0.1:5560");
+        do_bind_and_verify(sb, "tcp://127.0.0.1:5561");
+        do_bind_and_verify(sb, "ipc:///tmp/testep");
     }
 }

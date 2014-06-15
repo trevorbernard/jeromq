@@ -27,24 +27,28 @@ import org.zeromq.ZMsg;
  * Majordomo Protocol Client API, asynchronous Java version. Implements the
  * MDP/Worker spec at http://rfc.zeromq.org/spec:7.
  */
-public class mdcliapi2 {
+public class mdcliapi2
+{
 
-    private String broker;
-    private ZContext ctx;
+    private final String broker;
+    private final ZContext ctx;
     private ZMQ.Socket client;
     private long timeout = 2500;
-    private boolean verbose;
-    private Formatter log = new Formatter(System.out);
+    private final boolean verbose;
+    private final Formatter log = new Formatter(System.out);
 
-    public long getTimeout() {
+    public long getTimeout()
+    {
         return timeout;
     }
 
-    public void setTimeout(long timeout) {
+    public void setTimeout(final long timeout)
+    {
         this.timeout = timeout;
     }
 
-    public mdcliapi2(String broker, boolean verbose) {
+    public mdcliapi2(final String broker, final boolean verbose)
+    {
         this.broker = broker;
         this.verbose = verbose;
         ctx = new ZContext();
@@ -54,14 +58,16 @@ public class mdcliapi2 {
     /**
      * Connect or reconnect to broker
      */
-    void reconnectToBroker() {
+    void reconnectToBroker()
+    {
         if (client != null) {
             ctx.destroySocket(client);
         }
         client = ctx.createSocket(ZMQ.DEALER);
         client.connect(broker);
-        if (verbose)
+        if (verbose) {
             log.format("I: connecting to broker at %s...\n", broker);
+        }
     }
 
     /**
@@ -69,17 +75,19 @@ public class mdcliapi2 {
      * to recover from a broker failure, this is not possible without storing
      * all unanswered requests and resending them all…
      */
-    public ZMsg recv() {
+    public ZMsg recv()
+    {
         ZMsg reply = null;
 
         // Poll socket for a reply, with timeout
-        ZMQ.Poller items = new ZMQ.Poller(1);
+        final ZMQ.Poller items = new ZMQ.Poller(1);
         items.register(client, ZMQ.Poller.POLLIN);
-        if (items.poll(timeout * 1000) == -1)
+        if (items.poll(timeout * 1000) == -1) {
             return null; // Interrupted
+        }
 
         if (items.pollin(0)) {
-            ZMsg msg = ZMsg.recvMsg(client);
+            final ZMsg msg = ZMsg.recvMsg(client);
             if (verbose) {
                 log.format("I: received reply: \n");
                 msg.dump(log.out());
@@ -87,15 +95,15 @@ public class mdcliapi2 {
             // Don't try to handle errors, just assert noisily
             assert (msg.size() >= 4);
 
-            ZFrame empty = msg.pop();
+            final ZFrame empty = msg.pop();
             assert (empty.getData().length == 0);
             empty.destroy();
 
-            ZFrame header = msg.pop();
+            final ZFrame header = msg.pop();
             assert (MDP.C_CLIENT.equals(header.toString()));
             header.destroy();
 
-            ZFrame replyService = msg.pop();
+            final ZFrame replyService = msg.pop();
             replyService.destroy();
 
             reply = msg;
@@ -107,7 +115,8 @@ public class mdcliapi2 {
      * Send request to broker and get reply by hook or crook Takes ownership of
      * request message and destroys it when sent.
      */
-    public boolean send(String service, ZMsg request) {
+    public boolean send(final String service, final ZMsg request)
+    {
         assert (request != null);
 
         // Prefix request with protocol frames
@@ -124,7 +133,8 @@ public class mdcliapi2 {
         return request.send(client);
     }
 
-    public void destroy() {
+    public void destroy()
+    {
         ctx.destroy();
     }
 }

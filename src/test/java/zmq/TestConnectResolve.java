@@ -17,46 +17,43 @@
         
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 
 package zmq;
 
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.junit.Assert.assertThat;
+
 import org.junit.Test;
-import static org.junit.Assert.*;
-import static org.hamcrest.CoreMatchers.*;
 
-public class TestConnectResolve {
+public class TestConnectResolve
+{
 
-	@Test
-	public void testConnectResolve() {
-	    System.out.println( "test_connect_resolve running...\n");
-	
-	    Ctx ctx = ZMQ.zmq_init (1);
-	    assertThat (ctx, notNullValue());
-	
-	    //  Create pair of socket, each with high watermark of 2. Thus the total
-	    //  buffer space should be 4 messages.
-	    SocketBase sock = ZMQ.zmq_socket (ctx, ZMQ.ZMQ_PUB);
-	    assertThat (sock, notNullValue());
-	
-	    
-	    boolean brc = ZMQ.zmq_connect (sock, "tcp://localhost:1234");
-	    assertThat (brc, is(true));
-	
+    @Test
+    public void testConnectResolve()
+    {
+        System.out.println("test_connect_resolve running...\n");
 
-	    /*
-	    try {
-	        brc = ZMQ.zmq_connect (sock, "tcp://foobar123xyz:1234");
-	        assertTrue(false);
-	    } catch (IllegalArgumentException e) {
-	    }
-	    */
-	    
-	    
-	    ZMQ.zmq_close (sock);
-	
-	    
-	    ZMQ.zmq_term (ctx);
-	    
-	}
+        final Ctx ctx = ZMQ.zmq_init(1);
+        assertThat(ctx, notNullValue());
+
+        // Create pair of socket, each with high watermark of 2. Thus the total
+        // buffer space should be 4 messages.
+        final SocketBase sock = ZMQ.zmq_socket(ctx, ZMQ.ZMQ_PUB);
+        assertThat(sock, notNullValue());
+
+        final boolean brc = ZMQ.zmq_connect(sock, "tcp://localhost:1234");
+        assertThat(brc, is(true));
+
+        /*
+         * try { brc = ZMQ.zmq_connect (sock, "tcp://foobar123xyz:1234");
+         * assertTrue(false); } catch (IllegalArgumentException e) { }
+         */
+
+        ZMQ.zmq_close(sock);
+
+        ZMQ.zmq_term(ctx);
+
+    }
 }

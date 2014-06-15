@@ -18,7 +18,7 @@
 
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 
 package zmq;
 
@@ -28,122 +28,137 @@ import java.util.List;
 //  Class manages a set of inbound pipes. On receive it performs fair
 //  queueing so that senders gone berserk won't cause denial of
 //  service for decent senders.
-public class FQ {
+public class FQ
+{
 
-    //  Inbound pipes.
+    // Inbound pipes.
     private final List<Pipe> pipes;
-    
-    //  Number of active pipes. All the active pipes are located at the
-    //  beginning of the pipes array.
+
+    // Number of active pipes. All the active pipes are located at the
+    // beginning of the pipes array.
     private int active;
 
-    //  Index of the next bound pipe to read a message from.
+    // Index of the next bound pipe to read a message from.
     private int current;
 
-    //  If true, part of a multipart message was already received, but
-    //  there are following parts still waiting in the current pipe.
+    // If true, part of a multipart message was already received, but
+    // there are following parts still waiting in the current pipe.
     private boolean more;
-    
-    public FQ () {
+
+    public FQ()
+    {
         active = 0;
         current = 0;
         more = false;
-        
+
         pipes = new ArrayList<Pipe>();
     }
-    
-    public void attach (Pipe pipe_)
+
+    public void attach(final Pipe pipe_)
     {
-        pipes.add (pipe_);
-        Utils.swap (pipes, active, pipes.size () - 1);
+        pipes.add(pipe_);
+        Utils.swap(pipes, active, pipes.size() - 1);
         active++;
     }
-    
-    public void terminated (Pipe pipe_)
-    {
-        final int index = pipes.indexOf (pipe_);
 
-        //  Remove the pipe from the list; adjust number of active pipes
-        //  accordingly.
+    public void terminated(final Pipe pipe_)
+    {
+        final int index = pipes.indexOf(pipe_);
+
+        // Remove the pipe from the list; adjust number of active pipes
+        // accordingly.
         if (index < active) {
             active--;
-            Utils.swap (pipes, index, active);
-            if (current == active)
+            Utils.swap(pipes, index, active);
+            if (current == active) {
                 current = 0;
+            }
         }
-        pipes.remove (pipe_);
+        pipes.remove(pipe_);
     }
 
-    public void activated (Pipe pipe_)
+    public void activated(final Pipe pipe_)
     {
-        //  Move the pipe to the list of active pipes.
-        Utils.swap(pipes, pipes.indexOf (pipe_), active);
+        // Move the pipe to the list of active pipes.
+        Utils.swap(pipes, pipes.indexOf(pipe_), active);
         active++;
     }
 
-    public Msg recv(ValueReference<Integer> errno)
+    public Msg recv(final ValueReference<Integer> errno)
     {
         return recvpipe(errno, null);
     }
 
-    public Msg recvpipe(ValueReference<Integer> errno, ValueReference<Pipe> pipe_) {
+    public Msg recvpipe(final ValueReference<Integer> errno,
+                        final ValueReference<Pipe> pipe_)
+    {
 
-        //  Round-robin over the pipes to get the next message.
+        // Round-robin over the pipes to get the next message.
         while (active > 0) {
 
-            //  Try to fetch new message. If we've already read part of the message
-            //  subsequent part should be immediately available.
-            Msg msg_ = pipes.get(current).read();
-            boolean fetched = msg_ != null;
+            // Try to fetch new message. If we've already read part of the
+            // message
+            // subsequent part should be immediately available.
+            final Msg msg_ = pipes.get(current).read();
+            final boolean fetched = msg_ != null;
 
-            //  Note that when message is not fetched, current pipe is deactivated
-            //  and replaced by another active pipe. Thus we don't have to increase
-            //  the 'current' pointer.
+            // Note that when message is not fetched, current pipe is
+            // deactivated
+            // and replaced by another active pipe. Thus we don't have to
+            // increase
+            // the 'current' pointer.
             if (fetched) {
-                if (pipe_ != null)
+                if (pipe_ != null) {
                     pipe_.set(pipes.get(current));
+                }
                 more = msg_.hasMore();
-                if (!more)
+                if (!more) {
                     current = (current + 1) % active;
+                }
                 return msg_;
             }
-            
-            //  Check the atomicity of the message.
-            //  If we've already received the first part of the message
-            //  we should get the remaining parts without blocking.
+
+            // Check the atomicity of the message.
+            // If we've already received the first part of the message
+            // we should get the remaining parts without blocking.
             assert (!more);
-            
+
             active--;
-            Utils.swap (pipes, current, active);
-            if (current == active)
+            Utils.swap(pipes, current, active);
+            if (current == active) {
                 current = 0;
+            }
         }
 
-        //  No message is available. Initialise the output parameter
-        //  to be a 0-byte message.
+        // No message is available. Initialise the output parameter
+        // to be a 0-byte message.
         errno.set(ZError.EAGAIN);
         return null;
     }
 
-    public boolean has_in ()
+    public boolean has_in()
     {
-        //  There are subsequent parts of the partly-read message available.
-        if (more)
+        // There are subsequent parts of the partly-read message available.
+        if (more) {
             return true;
+        }
 
-        //  Note that messing with current doesn't break the fairness of fair
-        //  queueing algorithm. If there are no messages available current will
-        //  get back to its original value. Otherwise it'll point to the first
-        //  pipe holding messages, skipping only pipes with no messages available.
+        // Note that messing with current doesn't break the fairness of fair
+        // queueing algorithm. If there are no messages available current will
+        // get back to its original value. Otherwise it'll point to the first
+        // pipe holding messages, skipping only pipes with no messages
+        // available.
         while (active > 0) {
-            if (pipes.get(current).check_read ())
+            if (pipes.get(current).check_read()) {
                 return true;
+            }
 
-            //  Deactivate the pipe.
+            // Deactivate the pipe.
             active--;
-            Utils.swap (pipes, current, active);
-            if (current == active)
+            Utils.swap(pipes, current, active);
+            if (current == active) {
                 current = 0;
+            }
         }
 
         return false;

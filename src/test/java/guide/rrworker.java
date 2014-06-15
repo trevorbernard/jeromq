@@ -9,26 +9,27 @@ import org.zeromq.ZMQ.Socket;
 //  Expects "Hello" from client, replies with "World"
 public class rrworker
 {
-    public static void main (String[] args) throws Exception {
-        Context context = ZMQ.context (1);
+    public static void main(final String[] args) throws Exception
+    {
+        final Context context = ZMQ.context(1);
 
-        //  Socket to talk to server
-        Socket responder = context.socket (ZMQ.REP);
-        responder.connect ("tcp://localhost:5560");
+        // Socket to talk to server
+        final Socket responder = context.socket(ZMQ.REP);
+        responder.connect("tcp://localhost:5560");
 
-        while (!Thread.currentThread ().isInterrupted ()) {
-            //  Wait for next request from client
-            String string = responder.recvStr (0);
-            System.out.printf ("Received request: [%s]\n", string);
+        while (!Thread.currentThread().isInterrupted()) {
+            // Wait for next request from client
+            final String string = responder.recvStr(0);
+            System.out.printf("Received request: [%s]\n", string);
 
-            //  Do some 'work'
-            Thread.sleep (1000);
+            // Do some 'work'
+            Thread.sleep(1000);
 
-            //  Send reply back to client
-            responder.send ("World");
+            // Send reply back to client
+            responder.send("World");
         }
 
-        //  We never get here but clean up anyhow
+        // We never get here but clean up anyhow
         responder.close();
         context.term();
     }

@@ -17,15 +17,15 @@
 
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 
 package zmq;
 
-import org.junit.Test;
-import static org.junit.Assert.assertThat;
 import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.junit.Assert.assertThat;
+
+import org.junit.Test;
 
 public class TestRouterMandatory
 {
@@ -35,15 +35,15 @@ public class TestRouterMandatory
         int rc;
         boolean brc;
 
-        Ctx ctx = ZMQ.zmq_init(1);
+        final Ctx ctx = ZMQ.zmq_init(1);
         assertThat(ctx, notNullValue());
 
-        SocketBase sa = ZMQ.zmq_socket(ctx, ZMQ.ZMQ_ROUTER);
+        final SocketBase sa = ZMQ.zmq_socket(ctx, ZMQ.ZMQ_ROUTER);
         ZMQ.zmq_setsockopt(sa, ZMQ.ZMQ_SNDHWM, 1);
         assertThat(sa, notNullValue());
 
         brc = ZMQ.zmq_bind(sa, "tcp://127.0.0.1:15560");
-        assertThat(brc , is(true));
+        assertThat(brc, is(true));
 
         // Sending a message to an unknown peer with the default setting
         rc = ZMQ.zmq_send(sa, "UNKNOWN", ZMQ.ZMQ_SNDMORE);
@@ -51,7 +51,7 @@ public class TestRouterMandatory
         rc = ZMQ.zmq_send(sa, "DATA", 0);
         assertThat(rc, is(4));
 
-        int mandatory = 1;
+        final int mandatory = 1;
 
         // Set mandatory routing on socket
         ZMQ.zmq_setsockopt(sa, ZMQ.ZMQ_ROUTER_MANDATORY, mandatory);
@@ -62,7 +62,7 @@ public class TestRouterMandatory
         assertThat(sa.errno(), is(ZError.EHOSTUNREACH));
 
         // Create a valid socket
-        SocketBase sb = ZMQ.zmq_socket(ctx, ZMQ.ZMQ_DEALER);
+        final SocketBase sb = ZMQ.zmq_socket(ctx, ZMQ.ZMQ_DEALER);
         assertThat(sb, notNullValue());
 
         ZMQ.zmq_setsockopt(sb, ZMQ.ZMQ_RCVHWM, 1);
@@ -91,7 +91,7 @@ public class TestRouterMandatory
         assertThat(rc, is(-1));
         assertThat(sa.errno(), is(ZError.EAGAIN));
 
-        //  Clean up.
+        // Clean up.
         ZMQ.zmq_close(sa);
         ZMQ.zmq_close(sb);
         ZMQ.zmq_term(ctx);

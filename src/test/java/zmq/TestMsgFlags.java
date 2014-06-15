@@ -17,59 +17,62 @@
         
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 
 package zmq;
 
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.junit.Assert.assertThat;
+
 import org.junit.Test;
-import static org.junit.Assert.*;
-import static org.hamcrest.CoreMatchers.*;
 
-public class TestMsgFlags {
-    //  Create REQ/ROUTER wiring.
-    
+public class TestMsgFlags
+{
+    // Create REQ/ROUTER wiring.
+
     @Test
-    public void testMsgFlags() {
-        Ctx ctx = ZMQ.zmq_init (1);
-        assertThat (ctx, notNullValue());
-        SocketBase sb = ZMQ.zmq_socket (ctx, ZMQ.ZMQ_ROUTER);
-        assertThat (sb, notNullValue());
-        boolean brc = ZMQ.zmq_bind (sb, "inproc://a");
-        assertThat (brc , is(true));
-        
-        SocketBase sc = ZMQ.zmq_socket (ctx, ZMQ.ZMQ_DEALER);
-        assertThat (sc, notNullValue());
-        brc = ZMQ.zmq_connect (sc, "inproc://a");
-        assertThat (brc , is(true));
-        
+    public void testMsgFlags()
+    {
+        final Ctx ctx = ZMQ.zmq_init(1);
+        assertThat(ctx, notNullValue());
+        final SocketBase sb = ZMQ.zmq_socket(ctx, ZMQ.ZMQ_ROUTER);
+        assertThat(sb, notNullValue());
+        boolean brc = ZMQ.zmq_bind(sb, "inproc://a");
+        assertThat(brc, is(true));
+
+        final SocketBase sc = ZMQ.zmq_socket(ctx, ZMQ.ZMQ_DEALER);
+        assertThat(sc, notNullValue());
+        brc = ZMQ.zmq_connect(sc, "inproc://a");
+        assertThat(brc, is(true));
+
         int rc;
-        //  Send 2-part message.
-        rc = ZMQ.zmq_send (sc, "A", ZMQ.ZMQ_SNDMORE);
+        // Send 2-part message.
+        rc = ZMQ.zmq_send(sc, "A", ZMQ.ZMQ_SNDMORE);
         assert (rc == 1);
-        rc = ZMQ.zmq_send (sc, "B", 0);
+        rc = ZMQ.zmq_send(sc, "B", 0);
         assert (rc == 1);
 
-        //  Identity comes first.
-        Msg msg = ZMQ.zmq_recvmsg (sb, 0);
-        int more = ZMQ.zmq_msg_get (msg, ZMQ.ZMQ_MORE);
+        // Identity comes first.
+        Msg msg = ZMQ.zmq_recvmsg(sb, 0);
+        int more = ZMQ.zmq_msg_get(msg, ZMQ.ZMQ_MORE);
         assert (more == 1);
 
-        //  Then the first part of the message body.
-        msg = ZMQ.zmq_recvmsg (sb, 0);
+        // Then the first part of the message body.
+        msg = ZMQ.zmq_recvmsg(sb, 0);
         assert (rc == 1);
-        more = ZMQ.zmq_msg_get (msg, ZMQ.ZMQ_MORE);
+        more = ZMQ.zmq_msg_get(msg, ZMQ.ZMQ_MORE);
         assert (more == 1);
 
-        //  And finally, the second part of the message body.
-        msg = ZMQ.zmq_recvmsg (sb,  0);
+        // And finally, the second part of the message body.
+        msg = ZMQ.zmq_recvmsg(sb, 0);
         assert (rc == 1);
-        more = ZMQ.zmq_msg_get (msg, ZMQ.ZMQ_MORE);
+        more = ZMQ.zmq_msg_get(msg, ZMQ.ZMQ_MORE);
         assert (more == 0);
 
-        
-        //  Tear down the wiring.
-        ZMQ.zmq_close (sb);
-        ZMQ.zmq_close (sc);
-        ZMQ.zmq_term (ctx);
+        // Tear down the wiring.
+        ZMQ.zmq_close(sb);
+        ZMQ.zmq_close(sc);
+        ZMQ.zmq_term(ctx);
     }
 }

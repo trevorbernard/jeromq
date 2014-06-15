@@ -16,38 +16,43 @@
 
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 package zmq;
 
 import java.net.InetSocketAddress;
 
 // fake Unix domain socket
-public class IpcListener extends TcpListener {
+public class IpcListener extends TcpListener
+{
 
     private final IpcAddress address;
-    
-    public IpcListener(IOThread io_thread_, SocketBase socket_, final Options options_) {
+
+    public IpcListener(final IOThread io_thread_, final SocketBase socket_,
+                       final Options options_)
+    {
         super(io_thread_, socket_, options_);
-    
+
         address = new IpcAddress();
     }
 
     // Get the bound address for use with wildcards
-    public String get_address() {
+    @Override
+    public String get_address()
+    {
         return address.toString();
     }
-    
 
-    //  Set address to listen on.
-    public int set_address(String addr_) {
-        
-        address.resolve (addr_, false);
-        
-        InetSocketAddress sock = (InetSocketAddress) address.address();
-        String fake = sock.getAddress().getHostAddress() + ":" + sock.getPort();
+    // Set address to listen on.
+    @Override
+    public int set_address(final String addr_)
+    {
+
+        address.resolve(addr_, false);
+
+        final InetSocketAddress sock = (InetSocketAddress) address.address();
+        final String fake = sock.getAddress().getHostAddress() + ":"
+                            + sock.getPort();
         return super.set_address(fake);
     }
 
-
-    
 }

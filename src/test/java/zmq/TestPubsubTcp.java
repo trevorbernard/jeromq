@@ -17,49 +17,52 @@
 
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 package zmq;
 
-import org.junit.Test;
-import static org.junit.Assert.*;
-import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
 
-public class TestPubsubTcp {
+import org.junit.Test;
+
+public class TestPubsubTcp
+{
 
     @Test
-    public void testPubsubTcp()  throws Exception {
-        Ctx ctx = ZMQ.zmq_init (1);
-        assert (ctx!= null);
+    public void testPubsubTcp() throws Exception
+    {
+        final Ctx ctx = ZMQ.zmq_init(1);
+        assert (ctx != null);
 
-        SocketBase sb = ZMQ.zmq_socket (ctx, ZMQ.ZMQ_PUB);
+        final SocketBase sb = ZMQ.zmq_socket(ctx, ZMQ.ZMQ_PUB);
         assert (sb != null);
-        boolean rc = ZMQ.zmq_bind (sb, "tcp://127.0.0.1:7660");
-        assert (rc );
+        boolean rc = ZMQ.zmq_bind(sb, "tcp://127.0.0.1:7660");
+        assert (rc);
 
-        SocketBase sc = ZMQ.zmq_socket (ctx, ZMQ.ZMQ_SUB);
+        final SocketBase sc = ZMQ.zmq_socket(ctx, ZMQ.ZMQ_SUB);
         assert (sc != null);
-        
+
         sc.setsockopt(ZMQ.ZMQ_SUBSCRIBE, "topic");
-        
-        rc = ZMQ.zmq_connect (sc, "tcp://127.0.0.1:7660");
+
+        rc = ZMQ.zmq_connect(sc, "tcp://127.0.0.1:7660");
         assert (rc);
 
         ZMQ.zmq_sleep(2);
-        
+
         sb.send(new Msg("topic abc".getBytes(ZMQ.CHARSET)), 0);
         sb.send(new Msg("topix defg".getBytes(ZMQ.CHARSET)), 0);
         sb.send(new Msg("topic defgh".getBytes(ZMQ.CHARSET)), 0);
-        
+
         Msg msg = sc.recv(0);
         assertThat(msg.size(), is(9));
 
         msg = sc.recv(0);
         assertThat(msg.size(), is(11));
-        
-        ZMQ.zmq_close (sc);
 
-        ZMQ.zmq_close (sb);
-        
-        ZMQ.zmq_term (ctx);
+        ZMQ.zmq_close(sc);
+
+        ZMQ.zmq_close(sb);
+
+        ZMQ.zmq_term(ctx);
     }
 }

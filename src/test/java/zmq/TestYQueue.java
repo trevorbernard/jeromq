@@ -17,12 +17,13 @@
 
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 package zmq;
 
-import org.junit.Test;
-import static org.junit.Assert.assertThat;
 import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
+
+import org.junit.Test;
 
 public class TestYQueue
 {
@@ -30,15 +31,15 @@ public class TestYQueue
     public void testReuse()
     {
         // yqueue has a first empty entry
-        YQueue<Msg> p = new YQueue<Msg>(3);
+        final YQueue<Msg> p = new YQueue<Msg>(3);
 
-        Msg m1 = new Msg(1);
-        Msg m2 = new Msg(2);
-        Msg m3 = new Msg(3);
-        Msg m4 = new Msg(4);
-        Msg m5 = new Msg(5);
-        Msg m6 = new Msg(6);
-        Msg m7 = new Msg(7);
+        final Msg m1 = new Msg(1);
+        final Msg m2 = new Msg(2);
+        final Msg m3 = new Msg(3);
+        final Msg m4 = new Msg(4);
+        final Msg m5 = new Msg(5);
+        final Msg m6 = new Msg(6);
+        final Msg m7 = new Msg(7);
         m7.put("1234567".getBytes(ZMQ.CHARSET));
 
         p.push(m1);

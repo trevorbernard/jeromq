@@ -17,28 +17,29 @@
 
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 package zmq;
 
-import org.junit.Test;
-import static org.junit.Assert.assertThat;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.junit.Assert.assertThat;
+
+import org.junit.Test;
 
 public class TestReqrepTcp
 {
     @Test
     public void testReqrepTcp() throws Exception
     {
-        Ctx ctx = ZMQ.zmq_init(1);
+        final Ctx ctx = ZMQ.zmq_init(1);
         assertThat(ctx, notNullValue());
 
-        SocketBase sb = ZMQ.zmq_socket(ctx, ZMQ.ZMQ_REP);
+        final SocketBase sb = ZMQ.zmq_socket(ctx, ZMQ.ZMQ_REP);
         assertThat(sb, notNullValue());
         boolean rc = ZMQ.zmq_bind(sb, "tcp://127.0.0.1:7560");
         assertThat(rc, is(true));
 
-        SocketBase sc = ZMQ.zmq_socket(ctx, ZMQ.ZMQ_REQ);
+        final SocketBase sc = ZMQ.zmq_socket(ctx, ZMQ.ZMQ_REQ);
         assertThat(sc, notNullValue());
         rc = ZMQ.zmq_connect(sc, "tcp://127.0.0.1:7560");
         assertThat(rc, is(true));

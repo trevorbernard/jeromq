@@ -16,29 +16,30 @@ import org.zeromq.ZMQ.Socket;
 public class lpserver
 {
 
-    public static void main(String[] argv) throws Exception
+    public static void main(final String[] argv) throws Exception
     {
-        Random rand = new Random(System.nanoTime());
+        final Random rand = new Random(System.nanoTime());
 
-        Context context = ZMQ.context(1);
-        Socket server = context.socket(ZMQ.REP);
+        final Context context = ZMQ.context(1);
+        final Socket server = context.socket(ZMQ.REP);
         server.bind("tcp://*:5555");
 
         int cycles = 0;
         while (true) {
-            String request = server.recvStr();
+            final String request = server.recvStr();
             cycles++;
 
-            //  Simulate various problems, after a few cycles
+            // Simulate various problems, after a few cycles
             if (cycles > 3 && rand.nextInt(3) == 0) {
                 System.out.println("I: simulating a crash");
                 break;
-            } else if (cycles > 3 && rand.nextInt(3) == 0) {
+            }
+            else if (cycles > 3 && rand.nextInt(3) == 0) {
                 System.out.println("I: simulating CPU overload");
                 Thread.sleep(2000);
             }
             System.out.printf("I: normal request (%s)\n", request);
-            Thread.sleep(1000);              //  Do some heavy work
+            Thread.sleep(1000); // Do some heavy work
             server.send(request);
         }
         server.close();

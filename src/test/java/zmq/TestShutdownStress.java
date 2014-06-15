@@ -17,13 +17,14 @@
 
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 package zmq;
 
-import org.junit.Test;
-import static org.junit.Assert.assertThat;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.junit.Assert.assertThat;
+
+import org.junit.Test;
 
 public class TestShutdownStress
 {
@@ -32,7 +33,8 @@ public class TestShutdownStress
     class Worker implements Runnable
     {
         SocketBase s;
-        Worker(SocketBase s)
+
+        Worker(final SocketBase s)
         {
             this.s = s;
         }
@@ -40,10 +42,11 @@ public class TestShutdownStress
         @Override
         public void run()
         {
-            boolean rc = ZMQ.zmq_connect(s, "tcp://127.0.0.1:5560");
+            final boolean rc = ZMQ.zmq_connect(s, "tcp://127.0.0.1:5560");
             assertThat(rc, is(true));
 
-            //  Start closing the socket while the connecting process is underway.
+            // Start closing the socket while the connecting process is
+            // underway.
             ZMQ.zmq_close(s);
         }
     }
@@ -51,20 +54,20 @@ public class TestShutdownStress
     @Test
     public void testShutdownStress() throws Exception
     {
-        Thread[] threads = new Thread[THREAD_COUNT];
+        final Thread[] threads = new Thread[THREAD_COUNT];
 
         for (int j = 0; j != 10; j++) {
-            Ctx ctx = ZMQ.zmq_init(7);
+            final Ctx ctx = ZMQ.zmq_init(7);
             assertThat(ctx, notNullValue());
 
-            SocketBase s1 = ZMQ.zmq_socket(ctx, ZMQ.ZMQ_PUB);
+            final SocketBase s1 = ZMQ.zmq_socket(ctx, ZMQ.ZMQ_PUB);
             assertThat(s1, notNullValue());
 
-            boolean rc = ZMQ.zmq_bind(s1, "tcp://127.0.0.1:7570");
+            final boolean rc = ZMQ.zmq_bind(s1, "tcp://127.0.0.1:7570");
             assertThat(rc, is(true));
 
             for (int i = 0; i != THREAD_COUNT; i++) {
-                SocketBase s2 = ZMQ.zmq_socket(ctx, ZMQ.ZMQ_SUB);
+                final SocketBase s2 = ZMQ.zmq_socket(ctx, ZMQ.ZMQ_SUB);
                 assert (s2 != null);
                 threads[i] = new Thread(new Worker(s2));
                 threads[i].start();

@@ -17,23 +17,24 @@
 
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 package zmq;
+
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.nullValue;
+import static org.junit.Assert.assertThat;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.Test;
-import static org.junit.Assert.assertThat;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.nullValue;
 
 public class TestUtils
 {
     @Test
     public void testRealloc()
     {
-        Integer[] src = new Integer[] {1, 3, 5};
+        Integer[] src = new Integer[] { 1, 3, 5 };
         Integer[] dest = Utils.realloc(Integer.class, src, 3, true);
 
         assertThat(src.length, is(3));
@@ -56,7 +57,7 @@ public class TestUtils
         assertThat(dest[4], is(3));
         assertThat(dest[5], is(5));
 
-        src = new Integer[] {1, 3, 5, 7, 9, 11};
+        src = new Integer[] { 1, 3, 5, 7, 9, 11 };
         dest = Utils.realloc(Integer.class, src, 4, false);
         assertThat(dest.length, is(4));
         assertThat(dest[0], is(1));
@@ -75,7 +76,7 @@ public class TestUtils
     @Test
     public void testSwap()
     {
-        List<Integer> data = new ArrayList<Integer>();
+        final List<Integer> data = new ArrayList<Integer>();
         data.add(1);
         data.add(3);
         data.add(5);

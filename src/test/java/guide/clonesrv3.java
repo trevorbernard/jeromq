@@ -13,38 +13,41 @@ import org.zeromq.ZMQ.Socket;
 /**
  * Clone server Model Three
  * @author Danish Shrestha <dshrestha06@gmail.com>
- *
  */
-public class clonesrv3 {
+public class clonesrv3
+{
     private static Map<String, kvsimple> kvMap = new LinkedHashMap<String, kvsimple>();
 
-    public void run() {
+    public void run()
+    {
 
-        ZContext ctx = new ZContext();
+        final ZContext ctx = new ZContext();
 
-        Socket snapshot = ctx.createSocket(ZMQ.ROUTER);
+        final Socket snapshot = ctx.createSocket(ZMQ.ROUTER);
         snapshot.bind("tcp://*:5556");
 
-        Socket publisher = ctx.createSocket(ZMQ.PUB);
+        final Socket publisher = ctx.createSocket(ZMQ.PUB);
         publisher.bind("tcp://*:5557");
 
-        Socket collector = ctx.createSocket(ZMQ.PULL);
+        final Socket collector = ctx.createSocket(ZMQ.PULL);
         collector.bind("tcp://*:5558");
 
-        Poller poller = new Poller(2);
+        final Poller poller = new Poller(2);
         poller.register(collector, Poller.POLLIN);
         poller.register(snapshot, Poller.POLLIN);
 
         long sequence = 0;
         while (!Thread.currentThread().isInterrupted()) {
-            if (poller.poll(1000) < 0)
-                break;              //  Context has been shut down
+            if (poller.poll(1000) < 0) {
+                break; // Context has been shut down
+            }
 
             // apply state updates from main thread
             if (poller.pollin(0)) {
-                kvsimple kvMsg = kvsimple.recv(collector);
-                if (kvMsg == null)  //  Interrupted
+                final kvsimple kvMsg = kvsimple.recv(collector);
+                if (kvMsg == null) {
                     break;
+                }
                 kvMsg.setSequence(++sequence);
                 kvMsg.send(publisher);
                 clonesrv3.kvMap.put(kvMsg.getKey(), kvMsg);
@@ -53,41 +56,48 @@ public class clonesrv3 {
 
             // execute state snapshot request
             if (poller.pollin(1)) {
-                byte[] identity = snapshot.recv(0);
-                if (identity == null)
-                    break;      //  Interrupted
-                String request = snapshot.recvStr();
+                final byte[] identity = snapshot.recv(0);
+                if (identity == null) {
+                    break; // Interrupted
+                }
+                final String request = snapshot.recvStr();
 
                 if (!request.equals("ICANHAZ?")) {
                     System.out.println("E: bad request, aborting");
                     break;
                 }
 
-                Iterator<Entry<String, kvsimple>> iter = kvMap.entrySet().iterator();
+                final Iterator<Entry<String, kvsimple>> iter = kvMap.entrySet()
+                                                                    .iterator();
                 while (iter.hasNext()) {
-                    Entry<String, kvsimple> entry = iter.next();
-                    kvsimple msg = entry.getValue();
-                    System.out.println("Sending message " + entry.getValue().getSequence());
+                    final Entry<String, kvsimple> entry = iter.next();
+                    final kvsimple msg = entry.getValue();
+                    System.out.println("Sending message "
+                                       + entry.getValue().getSequence());
                     this.sendMessage(msg, identity, snapshot);
                 }
 
                 // now send end message with getSequence number
                 System.out.println("Sending state snapshot = " + sequence);
                 snapshot.send(identity, ZMQ.SNDMORE);
-                kvsimple message = new kvsimple("KTHXBAI", sequence, ZMQ.SUBSCRIPTION_ALL);
+                final kvsimple message = new kvsimple("KTHXBAI", sequence,
+                                                      ZMQ.SUBSCRIPTION_ALL);
                 message.send(snapshot);
             }
         }
-        System.out.printf (" Interrupted\n%d messages handled\n", sequence);
+        System.out.printf(" Interrupted\n%d messages handled\n", sequence);
         ctx.destroy();
     }
 
-    private void sendMessage(kvsimple msg, byte[] identity, Socket snapshot) {
+    private void sendMessage(final kvsimple msg, final byte[] identity,
+                             final Socket snapshot)
+    {
         snapshot.send(identity, ZMQ.SNDMORE);
         msg.send(snapshot);
     }
 
-	public static void main(String[] args) {
-		new clonesrv3().run();
-	}
+    public static void main(final String[] args)
+    {
+        new clonesrv3().run();
+    }
 }

@@ -17,69 +17,78 @@
 
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/ 
+ */
 package zmq;
 
-public class Pair extends SocketBase {
-    
-    public static class PairSession extends SessionBase {
-        public PairSession(IOThread io_thread_, boolean connect_,
-            SocketBase socket_, final Options options_,
-            final Address addr_) {
+public class Pair extends SocketBase
+{
+
+    public static class PairSession extends SessionBase
+    {
+        public PairSession(final IOThread io_thread_, final boolean connect_,
+                           final SocketBase socket_, final Options options_,
+                           final Address addr_)
+        {
             super(io_thread_, connect_, socket_, options_, addr_);
         }
     }
 
     private Pipe pipe;
-    
-	Pair(Ctx parent_, int tid_, int sid_) {
-		super(parent_, tid_, sid_);
-		options.type = ZMQ.ZMQ_PAIR;
-	}
 
-	@Override
-	protected void xattach_pipe (Pipe pipe_, boolean icanhasall_)
-	{     
-	    assert (pipe_ != null);
-	          
-	    //  ZMQ_PAIR socket can only be connected to a single peer.
-	    //  The socket rejects any further connection requests.
-	    if (pipe == null)
-	        pipe = pipe_;
-	    else
-	        pipe_.terminate (false);
-	}
-	
-	@Override
-	protected void xterminated (Pipe pipe_) {
-	    if (pipe_ == pipe)
-	        pipe = null;
-	}
-
-    @Override
-    protected void xread_activated(Pipe pipe_) {
-        //  There's just one pipe. No lists of active and inactive pipes.
-        //  There's nothing to do here.
+    Pair(final Ctx parent_, final int tid_, final int sid_)
+    {
+        super(parent_, tid_, sid_);
+        options.type = ZMQ.ZMQ_PAIR;
     }
 
-    
     @Override
-    protected void xwrite_activated (Pipe pipe_)
+    protected void xattach_pipe(final Pipe pipe_, final boolean icanhasall_)
     {
-        //  There's just one pipe. No lists of active and inactive pipes.
-        //  There's nothing to do here.
+        assert (pipe_ != null);
+
+        // ZMQ_PAIR socket can only be connected to a single peer.
+        // The socket rejects any further connection requests.
+        if (pipe == null) {
+            pipe = pipe_;
+        }
+        else {
+            pipe_.terminate(false);
+        }
     }
-    
+
     @Override
-    protected boolean xsend(Msg msg_)
+    protected void xterminated(final Pipe pipe_)
     {
-        if (pipe == null || !pipe.write (msg_)) {
+        if (pipe_ == pipe) {
+            pipe = null;
+        }
+    }
+
+    @Override
+    protected void xread_activated(final Pipe pipe_)
+    {
+        // There's just one pipe. No lists of active and inactive pipes.
+        // There's nothing to do here.
+    }
+
+    @Override
+    protected void xwrite_activated(final Pipe pipe_)
+    {
+        // There's just one pipe. No lists of active and inactive pipes.
+        // There's nothing to do here.
+    }
+
+    @Override
+    protected boolean xsend(final Msg msg_)
+    {
+        if (pipe == null || !pipe.write(msg_)) {
             errno.set(ZError.EAGAIN);
             return false;
         }
 
-        if ((msg_.flags() & ZMQ.ZMQ_SNDMORE) == 0)
-            pipe.flush ();
+        if ((msg_.flags() & ZMQ.ZMQ_SNDMORE) == 0) {
+            pipe.flush();
+        }
 
         return true;
     }
@@ -87,32 +96,34 @@ public class Pair extends SocketBase {
     @Override
     protected Msg xrecv()
     {
-        //  Deallocate old content of the message.
+        // Deallocate old content of the message.
         Msg msg_ = null;
         if (pipe == null || (msg_ = pipe.read()) == null) {
-            //  Initialise the output parameter to be a 0-byte message.
+            // Initialise the output parameter to be a 0-byte message.
             errno.set(ZError.EAGAIN);
             return null;
         }
         return msg_;
     }
 
-
     @Override
-    protected boolean xhas_in() {
-        if (pipe == null)
-            return false;
-
-        return pipe.check_read ();
-    }
-    
-    @Override
-    protected boolean xhas_out ()
+    protected boolean xhas_in()
     {
-        if (pipe == null)
+        if (pipe == null) {
             return false;
+        }
 
-        return pipe.check_write ();
+        return pipe.check_read();
+    }
+
+    @Override
+    protected boolean xhas_out()
+    {
+        if (pipe == null) {
+            return false;
+        }
+
+        return pipe.check_write();
     }
 
 }
